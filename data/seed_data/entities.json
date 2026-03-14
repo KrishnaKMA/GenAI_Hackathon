@@ -1,0 +1,12 @@
+[
+  { "entity_token": "CLAIMANT_A3F9", "entity_type": "CLAIMANT", "claim_count": 3,  "fraud_score": 91.0, "is_flagged": 1, "last_seen": "2024-03-21" },
+  { "entity_token": "CLAIMANT_B7K2", "entity_type": "CLAIMANT", "claim_count": 2,  "fraud_score": 88.0, "is_flagged": 1, "last_seen": "2024-02-03" },
+  { "entity_token": "CLAIMANT_C1M8", "entity_type": "CLAIMANT", "claim_count": 4,  "fraud_score": 85.0, "is_flagged": 1, "last_seen": "2024-03-21" },
+  { "entity_token": "PROVIDER_D4N1", "entity_type": "PROVIDER", "claim_count": 9,  "fraud_score": 72.0, "is_flagged": 1, "last_seen": "2024-02-04" },
+  { "entity_token": "PROVIDER_E9P3", "entity_type": "PROVIDER", "claim_count": 4,  "fraud_score": 45.0, "is_flagged": 0, "last_seen": "2024-03-22" },
+  { "entity_token": "SHOP_F2Q7",     "entity_type": "REPAIR_SHOP","claim_count":12,"fraud_score": 95.0, "is_flagged": 1, "last_seen": "2024-03-21" },
+  { "entity_token": "CLAIMANT_S5C6", "entity_type": "CLAIMANT", "claim_count": 4,  "fraud_score": 68.0, "is_flagged": 1, "last_seen": "2024-03-15" },
+  { "entity_token": "PROVIDER_T7D8", "entity_type": "PROVIDER", "claim_count": 5,  "fraud_score": 22.0, "is_flagged": 0, "last_seen": "2024-03-15" },
+  { "entity_token": "CLAIMANT_X1A2", "entity_type": "CLAIMANT", "claim_count": 1,  "fraud_score": 12.0, "is_flagged": 0, "last_seen": "2024-06-10" },
+  { "entity_token": "PROVIDER_Y3B4", "entity_type": "PROVIDER", "claim_count": 2,  "fraud_score": 8.0,  "is_flagged": 0, "last_seen": "2024-06-10" }
+]

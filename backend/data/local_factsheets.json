@@ -1,0 +1,12 @@
+[
+  {
+    "factsheet_id": "B1C7FC8E",
+    "claim_token": "CLAIM_TEST",
+    "timestamp": "2026-03-14T03:34:43.494636",
+    "model_version": "graphsage-v1.0-mock",
+    "combined_score": 91.0,
+    "risk_level": "CRITICAL",
+    "adjuster_id": "adj_001",
+    "decision": "FLAGGED"
+  }
+]

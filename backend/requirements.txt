@@ -1,0 +1,44 @@
+# ClaimShield Backend Dependencies
+# Install: pip install -r requirements.txt
+
+# Web framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Data validation
+pydantic==2.9.2
+
+# Auth
+PyJWT==2.9.0
+bcrypt==4.2.0
+pyotp==2.9.0
+
+# Encryption (PII tokenizer)
+cryptography==43.0.1
+
+# HTTP client (for business registry API in agent_interface)
+httpx==0.27.2
+
+# Async support
+anyio==4.6.0
+
+# Environment variables
+python-dotenv==1.0.1
+
+# ─────────────────────────────────────────────────────────
+# TEAMMATE A — ML dependencies (install when ready)
+# Uncomment these when you have your model files:
+# ─────────────────────────────────────────────────────────
+# torch==2.4.0
+# torch-geometric==2.6.0
+# scikit-learn==1.5.2
+# shap==0.46.0
+# numpy==1.26.4
+
+# ─────────────────────────────────────────────────────────
+# TEAMMATE B — IBM dependencies (install when credentials ready)
+# Uncomment these when you have WATSONX_API_KEY:
+# ─────────────────────────────────────────────────────────
+# ibm-watsonx-ai==1.1.2
+# ibm_db==3.2.3
+# ibm_db_sa==0.4.0
