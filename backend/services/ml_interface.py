@@ -69,8 +69,11 @@ if not USE_MOCK:
 async def run_fraud_analysis(claim_data: dict) -> FraudAnalysisResult:
     if USE_MOCK:
         return _mock_analysis(claim_data)
-    else:
+    try:
         return await _real_analysis(claim_data)
+    except NotImplementedError as exc:
+        print(f"[ML] WARNING: Real model path selected but not implemented ({exc}) -- falling back to MOCK analysis")
+        return _mock_analysis(claim_data)
 
 
 # ─────────────────────────────────────────────────────────
