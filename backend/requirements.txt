@@ -39,6 +39,10 @@ python-dotenv==1.0.1
 # TEAMMATE B — IBM dependencies (install when credentials ready)
 # Uncomment these when you have WATSONX_API_KEY:
 # ─────────────────────────────────────────────────────────
-# ibm-watsonx-ai==1.1.2
-# ibm_db==3.2.3
-# ibm_db_sa==0.4.0
+ibm-db
+ibm-watsonx-ai
+ibm-aigov-facts-client
+python-dotenv
+fastapi
+uvicorn
+
