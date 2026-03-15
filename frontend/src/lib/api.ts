@@ -16,7 +16,7 @@ const OFFLINE_DEMO_USERS = {
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  timeout: 15000,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -176,7 +176,9 @@ export const claimsApi = {
   },
 
   async create(payload: ClaimInput): Promise<ClaimRecord> {
-    const { data } = await apiClient.post<ClaimRecord>('/claims', payload)
+    const { data } = await apiClient.post<ClaimRecord>('/claims', payload, {
+      timeout: 45000,
+    })
     return data
   },
 
@@ -192,12 +194,16 @@ export const claimsApi = {
 
 export const analysisApi = {
   async analyze(claimToken: string): Promise<InvestigatorReport> {
-    const { data } = await apiClient.post<InvestigatorReport>(`/analyze/${claimToken}`)
+    const { data } = await apiClient.post<InvestigatorReport>(`/analyze/${claimToken}`, undefined, {
+      timeout: 90000,
+    })
     return data
   },
 
   async getDemo(riskLevel: RiskLevel): Promise<InvestigatorReport> {
-    const { data } = await apiClient.post<InvestigatorReport>(`/analyze/demo/${riskLevel}`)
+    const { data } = await apiClient.post<InvestigatorReport>(`/analyze/demo/${riskLevel}`, undefined, {
+      timeout: 60000,
+    })
     return data
   },
 }

@@ -184,8 +184,16 @@ async def store_graph_edges(edges: List[GraphEdge]) -> None:
     """Persist graph edges to the database (for history + replay)."""
     if not edges:
         return
+
+    where_clauses = []
+    params: list[str] = []
+    for edge in edges:
+        where_clauses.append("(source = ? AND target = ? AND edge_type = ? AND timestamp = ?)")
+        params.extend([edge.source, edge.target, edge.edge_type, edge.timestamp])
+
     existing_rows = await db.fetch_all(
-        "SELECT source, target, edge_type, timestamp FROM graph_edges"
+        f"SELECT source, target, edge_type, timestamp FROM graph_edges WHERE {' OR '.join(where_clauses)}",
+        tuple(params),
     )
     existing_keys = {
         (row["source"], row["target"], row["edge_type"], row["timestamp"])

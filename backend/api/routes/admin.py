@@ -72,20 +72,32 @@ async def delete_user(
 @router.get("/stats", response_model=dict)
 async def get_stats(user: TokenPayload = Depends(require_admin)):
     """System statistics for the admin dashboard."""
-    total_claims = await db.fetch_one("SELECT COUNT(*) as cnt FROM claims")
-    flagged      = await db.fetch_one("SELECT COUNT(*) as cnt FROM claims WHERE status='flagged'")
-    approved     = await db.fetch_one("SELECT COUNT(*) as cnt FROM claims WHERE status='approved'")
-    pending      = await db.fetch_one("SELECT COUNT(*) as cnt FROM claims WHERE status='pending'")
-    entities     = await db.fetch_one("SELECT COUNT(*) as cnt FROM entities")
-    inferences   = await db.fetch_one("SELECT COUNT(*) as cnt FROM inference_log")
-    critical     = await db.fetch_one("SELECT COUNT(*) as cnt FROM claims WHERE risk_level='CRITICAL'")
+    claim_stats = await db.fetch_one(
+        """SELECT
+               COUNT(*) AS total_claims,
+               SUM(CASE WHEN status = 'flagged' THEN 1 ELSE 0 END) AS flagged,
+               SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved,
+               SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
+               SUM(CASE WHEN risk_level = 'CRITICAL' THEN 1 ELSE 0 END) AS critical
+           FROM claims"""
+    )
+    side_stats = await db.fetch_one(
+        """SELECT
+               (SELECT COUNT(*) FROM entities) AS entities,
+               (SELECT COUNT(*) FROM inference_log) AS inferences
+        FROM SYSIBM.SYSDUMMY1"""
+        if db.USE_DB2 else
+        """SELECT
+               (SELECT COUNT(*) FROM entities) AS entities,
+               (SELECT COUNT(*) FROM inference_log) AS inferences"""
+    )
 
     return {
-        "total_claims": total_claims["cnt"] if total_claims else 0,
-        "flagged":      flagged["cnt"]      if flagged else 0,
-        "approved":     approved["cnt"]     if approved else 0,
-        "pending":      pending["cnt"]      if pending else 0,
-        "entities":     entities["cnt"]     if entities else 0,
-        "inferences":   inferences["cnt"]   if inferences else 0,
-        "critical":     critical["cnt"]     if critical else 0,
+        "total_claims": claim_stats["total_claims"] if claim_stats else 0,
+        "flagged":      (claim_stats["flagged"] or 0) if claim_stats else 0,
+        "approved":     (claim_stats["approved"] or 0) if claim_stats else 0,
+        "pending":      (claim_stats["pending"] or 0) if claim_stats else 0,
+        "entities":     (side_stats["entities"] or 0) if side_stats else 0,
+        "inferences":   (side_stats["inferences"] or 0) if side_stats else 0,
+        "critical":     (claim_stats["critical"] or 0) if claim_stats else 0,
     }

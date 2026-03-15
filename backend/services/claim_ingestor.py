@@ -72,10 +72,14 @@ async def ingest_claim(claim: ClaimInput) -> ClaimRecord:
         )
 
     # Upsert entities
-    await _upsert_entity(claimant_token, "CLAIMANT")
-    await _upsert_entity(provider_token, "PROVIDER")
+    entity_specs = [
+        (claimant_token, "CLAIMANT"),
+        (provider_token, "PROVIDER"),
+    ]
     if repair_shop_token:
-        await _upsert_entity(repair_shop_token, "REPAIR_SHOP")
+        entity_specs.append((repair_shop_token, "REPAIR_SHOP"))
+
+    await _upsert_entities(entity_specs)
 
     # Persist the graph relationships created by this claim so the ML layer has
     # a real neighborhood graph to inspect on subsequent analyses.
@@ -84,22 +88,41 @@ async def ingest_claim(claim: ClaimInput) -> ClaimRecord:
     return record
 
 
-async def _upsert_entity(token: str, entity_type: str) -> None:
-    """Insert entity if new, increment claim_count if existing."""
-    existing = await db.fetch_one(
-        "SELECT claim_count FROM entities WHERE entity_token = ?", (token,)
+async def _upsert_entities(entity_specs: list[tuple[str, str]]) -> None:
+    """Insert new entities and bump claim_count for existing ones."""
+    if not entity_specs:
+        return
+
+    unique_specs = list(dict.fromkeys(entity_specs))
+    placeholders = ",".join("?" for _ in unique_specs)
+    existing_rows = await db.fetch_all(
+        f"SELECT entity_token FROM entities WHERE entity_token IN ({placeholders})",
+        tuple(token for token, _ in unique_specs),
     )
+    existing_tokens = {row["entity_token"] for row in existing_rows}
     now = datetime.utcnow().isoformat()
-    if existing:
-        await db.execute(
+
+    updates = [
+        (now, token)
+        for token, _ in unique_specs
+        if token in existing_tokens
+    ]
+    inserts = [
+        (token, entity_type, now)
+        for token, entity_type in unique_specs
+        if token not in existing_tokens
+    ]
+
+    if updates:
+        await db.execute_many(
             "UPDATE entities SET claim_count = claim_count + 1, last_seen = ? WHERE entity_token = ?",
-            (now, token),
+            updates,
         )
-    else:
-        await db.execute(
+    if inserts:
+        await db.execute_many(
             "INSERT INTO entities (entity_token, entity_type, claim_count, fraud_score, is_flagged, last_seen) "
             "VALUES (?,?,1,0.0,0,?)",
-            (token, entity_type, now),
+            inserts,
         )
 
 

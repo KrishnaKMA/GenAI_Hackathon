@@ -7,6 +7,7 @@ ClaimShield is a fraud analysis application for insurance claims. It combines:
 - IBM integration hooks for narrative generation, governance factsheets, and Db2
 
 This repository is set up for local development and local demo use first. The recommended runtime is Docker Compose.
+The local demo stack uses SQLite by default for responsiveness, with local Db2 still available when you explicitly want to test that path.
 
 ## What The System Does
 
@@ -35,7 +36,7 @@ Working locally now:
 - claim submission
 - graph building
 - ML scoring path
-- local Db2 in Docker
+- fast local demo backend on SQLite
 - dashboard, claims table, report view, dark theme
 - smoke tests for core scenarios
 
@@ -85,7 +86,7 @@ Recommended:
 - Python 3.11
 - PowerShell on Windows
 
-You can run the project without Docker for parts of development, but the supported full local stack is Docker Compose because it includes local Db2 and the backend runtime dependencies.
+You can run the project without Docker for parts of development, but the supported full local stack is Docker Compose because it includes the backend runtime dependencies and optional local Db2 support.
 
 ## Dependencies
 
@@ -186,10 +187,21 @@ powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-local-db2.ps1
 ```
 
 What it does:
+- starts backend and frontend in fast local demo mode
+- uses SQLite by default
+- does not require Db2 for the normal demo path
+
+If you specifically want local Db2 too:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-local-db2.ps1 -UseDb2
+```
+
+That mode:
 - starts the local Db2 container
 - waits for Db2 readiness
 - creates `CLAIMDB` if needed
-- starts backend and frontend
+- then starts backend and frontend
 
 URLs:
 - Frontend: [http://localhost:5173](http://localhost:5173)

@@ -32,13 +32,7 @@ services:
       - ./backend/.env
     environment:
       - FRONTEND_URL=http://localhost:5173
-      - DB_BACKEND=db2
-      - DB_CONNECT_RETRIES=30
-      - DB_CONNECT_DELAY_SECONDS=10
-      - DB2_DATABASE=CLAIMDB
-      - DB2_DSN=DATABASE=CLAIMDB;HOSTNAME=db2;PORT=50000;PROTOCOL=TCPIP;UID=db2inst1;PWD=${DB2_PASSWORD:-ClaimShield123};
-    depends_on:
-      - db2
+      - DB_BACKEND=sqlite
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
