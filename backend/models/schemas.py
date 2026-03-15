@@ -244,6 +244,7 @@ class FactsheetEntry(BaseModel):
     decision: Literal["FLAGGED", "APPROVED"]
 
     model_config = {
+        "protected_namespaces": (),
         "json_schema_extra": {
             "example": {
                 "factsheet_id": "A1B2C3D4",

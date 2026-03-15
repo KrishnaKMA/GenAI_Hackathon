@@ -12,23 +12,29 @@ All other code uses fetch_one(), fetch_all(), execute() -- no changes needed.
 import os
 import sqlite3
 import asyncio
+import time
 from pathlib import Path
 from typing import Optional
  
-import ibm_db
+try:
+    import ibm_db  # type: ignore
+except ImportError:
+    ibm_db = None
  
 
 # AUTO-DETECTION
 # Essentially detects if DB2 is active if not defaults to SQLite
 DB2_DSN = os.getenv("DB2_DSN")
-USE_DB2  = bool(DB2_DSN)
+USE_DB2 = bool(DB2_DSN and ibm_db is not None)
 
 
 # Detect database location of SQLITE
 SQLITE_PATH = Path("data/local.db")
 SQLITE_PATH.parent.mkdir(exist_ok=True)
  
-if USE_DB2:
+if DB2_DSN and ibm_db is None:
+    print("[DB] WARNING: DB2_DSN set but ibm_db is not installed -- falling back to SQLite")
+elif USE_DB2:
     print("[DB] OK: DB2_DSN found -- using IBM Db2")
 else:
     print("[DB] WARNING: DB2_DSN not set -- using SQLite at", SQLITE_PATH)
@@ -255,13 +261,22 @@ async def create_tables():
     """Create all tables on startup if they don't exist."""
     if USE_DB2:
         def _create():
-            conn = _db2_connect()
-            try:
-                for sql in DB2_TABLES_SQL:
-                    _db2_create_table(conn, sql)
-            finally:
-                _db2_close(conn)
- 
+            last_error = None
+            for attempt in range(1, 31):
+                try:
+                    conn = _db2_connect()
+                    try:
+                        for sql in DB2_TABLES_SQL:
+                            _db2_create_table(conn, sql)
+                        return
+                    finally:
+                        _db2_close(conn)
+                except Exception as exc:
+                    last_error = exc
+                    print(f"[DB] Waiting for Db2 to accept connections ({attempt}/30): {exc}")
+                    time.sleep(10)
+            raise last_error
+
         await asyncio.to_thread(_create)
         print("[DB] Db2 tables ready")
         return

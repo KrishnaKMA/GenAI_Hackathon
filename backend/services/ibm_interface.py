@@ -28,10 +28,16 @@ from pathlib import Path
 from models.schemas import FraudAnalysisResult, FactsheetEntry
 import asyncio
 
-from ibm_watsonx_ai import APIClient, Credentials
-from ibm_watsonx_ai.foundation_models import ModelInference
-from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
-from ibm_aigov_facts_client import AIGovFactsClient
+try:
+    from ibm_watsonx_ai import APIClient, Credentials
+    from ibm_watsonx_ai.foundation_models import ModelInference
+    from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
+    from ibm_aigov_facts_client import AIGovFactsClient
+    IBM_IMPORTS_AVAILABLE = True
+except ImportError:
+    APIClient = Credentials = ModelInference = AIGovFactsClient = None
+    GenParams = None
+    IBM_IMPORTS_AVAILABLE = False
 
 
 
@@ -44,12 +50,14 @@ WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
 WATSONX_SPACE_ID   = os.getenv("WATSONX_SPACE_ID")   # needed for governance
 WATSONX_URL        = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com")
 DB2_DSN            = os.getenv("DB2_DSN")
-USE_MOCK           = not bool(WATSONX_API_KEY)
+USE_MOCK           = not bool(WATSONX_API_KEY and WATSONX_PROJECT_ID and IBM_IMPORTS_AVAILABLE)
 
 LOCAL_FACTSHEETS_PATH = Path("data/local_factsheets.json")
 LOCAL_FACTSHEETS_PATH.parent.mkdir(exist_ok=True)
 
-if USE_MOCK:
+if WATSONX_API_KEY and WATSONX_PROJECT_ID and not IBM_IMPORTS_AVAILABLE:
+    print("[IBM] WARNING: IBM credentials found but SDKs are not installed -- using MOCK IBM services")
+elif USE_MOCK:
     print("[IBM] WARNING: WATSONX_API_KEY not found -- using MOCK IBM services")
     print("[IBM] Factsheets stored locally at:", LOCAL_FACTSHEETS_PATH)
 else:
@@ -62,50 +70,53 @@ granite_model  = None
 facts_client   = None  # watsonx.governance client
 
 if not USE_MOCK:
-    # Watsonx AI client (for Granite)
-    credentials = Credentials(
-        url=WATSONX_URL,
-        api_key=WATSONX_API_KEY,
-    )
-    watsonx_client = APIClient(credentials)
-
-    # Granite LLM
-    granite_model = ModelInference(
-        model_id="ibm/granite-3-8b-instruct",
-        api_client=watsonx_client,
-        project_id=WATSONX_PROJECT_ID,
-        params={
-            GenParams.MAX_NEW_TOKENS:     450,
-            GenParams.MIN_NEW_TOKENS:     80,
-            GenParams.TEMPERATURE:        0.2,
-            GenParams.TOP_P:              0.9,
-            GenParams.REPETITION_PENALTY: 1.05,
-        },
-        verify=False,
-    )
-
-    # watsonx.governance facts client
-    # Prefers WATSONX_SPACE_ID, falls back to project
-    if WATSONX_SPACE_ID:
-        facts_client = AIGovFactsClient(
+    try:
+        credentials = Credentials(
+            url=WATSONX_URL,
             api_key=WATSONX_API_KEY,
-            experiment_name="claimshield-fraud-detection",
-            container_type="space",
-            container_id=WATSONX_SPACE_ID,
-            set_as_current_experiment=True,
         )
-        print("[IBM] OK: watsonx.governance connected via space")
-    elif WATSONX_PROJECT_ID:
-        facts_client = AIGovFactsClient(
-            api_key=WATSONX_API_KEY,
-            experiment_name="claimshield-fraud-detection",
-            container_type="project",
-            container_id=WATSONX_PROJECT_ID,
-            set_as_current_experiment=True,
+        watsonx_client = APIClient(credentials)
+
+        granite_model = ModelInference(
+            model_id="ibm/granite-3-8b-instruct",
+            api_client=watsonx_client,
+            project_id=WATSONX_PROJECT_ID,
+            params={
+                GenParams.MAX_NEW_TOKENS:     450,
+                GenParams.MIN_NEW_TOKENS:     80,
+                GenParams.TEMPERATURE:        0.2,
+                GenParams.TOP_P:              0.9,
+                GenParams.REPETITION_PENALTY: 1.05,
+            },
+            verify=False,
         )
-        print("[IBM] OK: watsonx.governance connected via project")
-    else:
-        print("[IBM] WARNING: No WATSONX_SPACE_ID or WATSONX_PROJECT_ID -- governance disabled")
+
+        if WATSONX_SPACE_ID:
+            facts_client = AIGovFactsClient(
+                api_key=WATSONX_API_KEY,
+                experiment_name="claimshield-fraud-detection",
+                container_type="space",
+                container_id=WATSONX_SPACE_ID,
+                set_as_current_experiment=True,
+            )
+            print("[IBM] OK: watsonx.governance connected via space")
+        elif WATSONX_PROJECT_ID:
+            facts_client = AIGovFactsClient(
+                api_key=WATSONX_API_KEY,
+                experiment_name="claimshield-fraud-detection",
+                container_type="project",
+                container_id=WATSONX_PROJECT_ID,
+                set_as_current_experiment=True,
+            )
+            print("[IBM] OK: watsonx.governance connected via project")
+        else:
+            print("[IBM] WARNING: No WATSONX_SPACE_ID or WATSONX_PROJECT_ID -- governance disabled")
+    except Exception as exc:
+        USE_MOCK = True
+        watsonx_client = None
+        granite_model = None
+        facts_client = None
+        print(f"[IBM] WARNING: IBM initialization failed ({exc}) -- using MOCK IBM services")
 
 
 
@@ -116,7 +127,11 @@ if not USE_MOCK:
 async def generate_narrative(analysis: FraudAnalysisResult) -> str:
     if USE_MOCK:
         return _mock_narrative(analysis)
-    return await _real_narrative(analysis)
+    try:
+        return await _real_narrative(analysis)
+    except Exception as exc:
+        print(f"[IBM] WARNING: Granite narrative failed ({exc}) -- using mock narrative")
+        return _mock_narrative(analysis)
 
 
 async def _real_narrative(analysis: FraudAnalysisResult) -> str:
@@ -199,7 +214,11 @@ def _mock_narrative(analysis: FraudAnalysisResult) -> str:
 async def log_factsheet(claim_token: str, analysis: FraudAnalysisResult, adjuster_id: str) -> str:
     if USE_MOCK:
         return _mock_log_factsheet(claim_token, analysis, adjuster_id)
-    return await _real_log_factsheet(claim_token, analysis, adjuster_id)
+    try:
+        return await _real_log_factsheet(claim_token, analysis, adjuster_id)
+    except Exception as exc:
+        print(f"[IBM] WARNING: Factsheet logging failed ({exc}) -- storing locally")
+        return _mock_log_factsheet(claim_token, analysis, adjuster_id)
 
 
 async def _real_log_factsheet(claim_token: str, analysis: FraudAnalysisResult, adjuster_id: str) -> str:
@@ -270,7 +289,11 @@ def _mock_log_factsheet(claim_token: str, analysis: FraudAnalysisResult, adjuste
 async def get_factsheets(limit: int = 10) -> list[FactsheetEntry]:
     if USE_MOCK:
         return _mock_get_factsheets(limit)
-    return await _real_get_factsheets(limit)
+    try:
+        return await _real_get_factsheets(limit)
+    except Exception as exc:
+        print(f"[IBM] WARNING: Factsheet fetch failed ({exc}) -- using local mock factsheets")
+        return _mock_get_factsheets(limit)
 
 
 async def _real_get_factsheets(limit: int) -> list[FactsheetEntry]:

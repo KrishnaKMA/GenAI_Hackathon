@@ -35,14 +35,14 @@ function Layout({ children }: { children: React.ReactNode }) {
       : location.pathname.startsWith(path)
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F4F0' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'transparent' }}>
 
       {/* ── Sidebar ── */}
       <aside style={{
         width:         '200px',
         flexShrink:    0,
-        background:    '#FFFFFF',
-        borderRight:   '1px solid #E8E6E1',
+        background:    'rgba(8, 17, 31, 0.82)',
+        borderRight:   '1px solid var(--border)',
         display:       'flex',
         flexDirection: 'column',
         padding:       '20px 12px',
@@ -55,21 +55,21 @@ function Layout({ children }: { children: React.ReactNode }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 8px', marginBottom: '28px' }}>
           <div style={{
             width: '26px', height: '26px',
-            background: '#1A1A1A',
+            background: 'linear-gradient(135deg, var(--accent), #3b82f6)',
             borderRadius: '6px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.65rem', fontWeight: 700, color: '#fff', flexShrink: 0,
+            fontSize: '0.65rem', fontWeight: 700, color: '#04111d', flexShrink: 0,
           }}>
             CS
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1A1A1A', lineHeight: 1.1 }}>ClaimShield</div>
-            <div style={{ fontSize: '0.6rem', color: '#9A9A9A', marginTop: '1px' }}>watsonx.ai</div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>ClaimShield</div>
+            <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginTop: '1px' }}>watsonx.ai</div>
           </div>
         </div>
 
         {/* Section label */}
-        <div style={{ fontSize: '0.6rem', fontWeight: 600, color: '#C4C4C4', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 10px', marginBottom: '6px' }}>
+        <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--subtle)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 10px', marginBottom: '6px' }}>
           Navigation
         </div>
 
@@ -87,26 +87,26 @@ function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User */}
-        <div style={{ borderTop: '1px solid #E8E6E1', paddingTop: '12px' }}>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', marginBottom: '4px' }}>
             <div style={{
               width: '24px', height: '24px', borderRadius: '50%',
-              background: '#F0EFEB', border: '1px solid #E8E6E1',
+              background: 'var(--panel-soft)', border: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.65rem', color: '#6B6B6B', fontWeight: 700, flexShrink: 0,
+              fontSize: '0.65rem', color: 'var(--text)', fontWeight: 700, flexShrink: 0,
             }}>
               {(user.username || 'U')[0].toUpperCase()}
             </div>
             <div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1A1A1A', lineHeight: 1 }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', lineHeight: 1 }}>
                 {user.username}
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#9A9A9A', marginTop: '2px', textTransform: 'capitalize' }}>
+              <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px', textTransform: 'capitalize' }}>
                 {user.role}
               </div>
             </div>
           </div>
-          <button onClick={logout} className="sidebar-item" style={{ color: '#9A9A9A', fontSize: '0.75rem' }}>
+          <button onClick={logout} className="sidebar-item" style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>
             Sign out
           </button>
         </div>
@@ -127,12 +127,12 @@ export default function App() {
         position="top-right"
         toastOptions={{
           style: {
-            background: '#FFFFFF',
-            color: '#1A1A1A',
-            border: '1px solid #E8E6E1',
+            background: 'var(--panel)',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
             borderRadius: '8px',
             fontSize: '0.875rem',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
+            boxShadow: '0 14px 32px rgba(2,6,23,0.35)',
           },
         }}
       />
