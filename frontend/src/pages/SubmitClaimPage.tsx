@@ -55,23 +55,23 @@ export function SubmitClaimPage() {
   }
 
   const inp: React.CSSProperties = {
-    background: '#FFFFFF', border: '1px solid #D4D2CC', borderRadius: '8px',
-    padding: '9px 12px', color: '#1A1A1A', fontSize: '0.875rem',
+    background: 'var(--panel-alt)', border: '1px solid var(--border)', borderRadius: '8px',
+    padding: '9px 12px', color: 'var(--text)', fontSize: '0.875rem',
     width: '100%', outline: 'none', fontFamily: 'Inter, sans-serif',
     transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   }
 
   const lbl: React.CSSProperties = {
-    display: 'block', fontSize: '0.7rem', fontWeight: 600, color: '#9A9A9A',
+    display: 'block', fontSize: '0.7rem', fontWeight: 600, color: 'var(--muted)',
     marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em',
   }
 
   const focus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = '#1A1A1A'
-    e.target.style.boxShadow   = '0 0 0 3px rgba(0,0,0,0.08)'
+    e.target.style.borderColor = '#57B7F8'
+    e.target.style.boxShadow   = '0 0 0 3px rgba(87,183,248,0.16)'
   }
   const blur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = '#D4D2CC'
+    e.target.style.borderColor = 'var(--border)'
     e.target.style.boxShadow   = 'none'
   }
 
@@ -80,27 +80,27 @@ export function SubmitClaimPage() {
 
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <button onClick={() => navigate('/dashboard')} style={{ background: 'transparent', border: 'none', color: '#9A9A9A', fontSize: '0.8125rem', padding: 0, cursor: 'pointer', marginBottom: '10px', fontFamily: 'Inter, sans-serif' }}>
+        <button onClick={() => navigate('/dashboard')} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '0.8125rem', padding: 0, cursor: 'pointer', marginBottom: '10px', fontFamily: 'Inter, sans-serif' }}>
           ← Back to Dashboard
         </button>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1A1A1A', letterSpacing: '-0.02em' }}>Submit New Claim</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>Submit New Claim</h1>
         <p style={{ color: '#9A9A9A', fontSize: '0.8125rem', marginTop: '3px' }}>Personal data is tokenized before storage — no PII is retained.</p>
       </div>
 
       {claimToken ? (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '32px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '32px', textAlign: 'center', boxShadow: '0 16px 40px rgba(3, 8, 20, 0.24)' }}>
           <div style={{ width: '48px', height: '48px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#16A34A', fontWeight: 700, fontSize: '1.25rem' }}>✓</div>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A1A', marginBottom: '8px' }}>Claim Submitted</h2>
-          <p style={{ color: '#9A9A9A', fontSize: '0.875rem', marginBottom: '4px' }}>
-            Token: <span style={{ fontFamily: 'monospace', color: '#1A1A1A', fontWeight: 600 }}>{claimToken}</span>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>Claim Submitted</h2>
+          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '4px' }}>
+            Token: <span style={{ fontFamily: 'monospace', color: 'var(--text)', fontWeight: 600 }}>{claimToken}</span>
           </p>
-          <p style={{ color: '#9A9A9A', fontSize: '0.875rem', marginBottom: '24px' }}>PII has been tokenized. Run analysis to detect fraud patterns.</p>
+          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '24px' }}>PII has been tokenized. Run analysis to detect fraud patterns.</p>
           <button onClick={handleAnalyze} disabled={analyzing} className="btn-primary" style={{ minWidth: '200px', opacity: analyzing ? 0.6 : 1 }}>
             {analyzing ? 'Running analysis...' : 'Analyze for Fraud'}
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} style={{ background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <form onSubmit={handleSubmit} style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '18px', boxShadow: '0 16px 40px rgba(3, 8, 20, 0.24)' }}>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
@@ -160,7 +160,7 @@ export function SubmitClaimPage() {
             <div style={{ background: '#FEE2E2', border: '1px solid #FECACA', borderRadius: '8px', padding: '10px 14px', color: '#DC2626', fontSize: '0.8125rem' }}>{error}</div>
           )}
 
-          <div style={{ background: '#F7F6F3', border: '1px solid #E8E6E1', borderRadius: '8px', padding: '10px 14px', fontSize: '0.75rem', color: '#9A9A9A' }}>
+          <div style={{ background: 'var(--panel-alt)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 14px', fontSize: '0.75rem', color: 'var(--muted)' }}>
             Claimant name and provider name are encrypted and tokenized before storage. Only anonymized tokens appear in the fraud graph.
           </div>
 

@@ -80,11 +80,11 @@ export function RedTeamMode({ onReport }: Props) {
 
   return (
     <div style={{
-      background:   '#FFFFFF',
-      border:       '1px solid #E8E6E1',
+      background:   'var(--panel)',
+      border:       '1px solid var(--border)',
       borderRadius: '10px',
       overflow:     'hidden',
-      boxShadow:    '0 1px 3px rgba(0,0,0,0.04)',
+      boxShadow:    '0 16px 40px rgba(3, 8, 20, 0.24)',
     }}>
       {/* Header */}
       <button
@@ -98,21 +98,21 @@ export function RedTeamMode({ onReport }: Props) {
           background:     'transparent',
           border:         'none',
           cursor:         'pointer',
-          borderBottom:   expanded ? '1px solid #E8E6E1' : 'none',
+          borderBottom:   expanded ? '1px solid var(--border)' : 'none',
           fontFamily:     'Inter, sans-serif',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1A1A1A' }}>Demo Scenarios</span>
+          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text)' }}>Demo Scenarios</span>
           <span style={{
-            background: '#F0EFEB', border: '1px solid #E8E6E1',
-            color: '#9A9A9A', fontSize: '0.7rem', fontWeight: 600,
+            background: 'var(--panel-soft)', border: '1px solid var(--border)',
+            color: 'var(--muted)', fontSize: '0.7rem', fontWeight: 600,
             borderRadius: '9999px', padding: '2px 10px', letterSpacing: '0.05em',
           }}>
             RED TEAM
           </span>
         </div>
-        <span style={{ color: '#9A9A9A', fontSize: '0.875rem' }}>
+        <span style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
           {expanded ? '▲' : '▼'}
         </span>
       </button>
@@ -125,8 +125,8 @@ export function RedTeamMode({ onReport }: Props) {
               onClick={() => loadScenario(s.key)}
               disabled={loading !== null}
               style={{
-                background:   '#F7F6F3',
-                border:       `1px solid ${loading === s.key ? s.color : '#E8E6E1'}`,
+                background:   'var(--panel-alt)',
+                border:       `1px solid ${loading === s.key ? s.color : 'var(--border)'}`,
                 borderRadius: '10px',
                 padding:      '14px',
                 textAlign:    'left',
@@ -136,7 +136,7 @@ export function RedTeamMode({ onReport }: Props) {
                 fontFamily:   'Inter, sans-serif',
               }}
               onMouseEnter={e => !loading && (e.currentTarget.style.borderColor = s.color)}
-              onMouseLeave={e => !loading && (e.currentTarget.style.borderColor = '#E8E6E1')}
+              onMouseLeave={e => !loading && (e.currentTarget.style.borderColor = 'var(--border)')}
             >
               {/* Color dot + label */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -149,11 +149,11 @@ export function RedTeamMode({ onReport }: Props) {
                     display: 'inline-block',
                   }} />
                 )}
-                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#1A1A1A' }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text)' }}>
                   {s.label}
                 </span>
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#9A9A9A', lineHeight: 1.4 }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--muted)', lineHeight: 1.4 }}>
                 {s.description}
               </div>
             </button>

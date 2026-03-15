@@ -42,12 +42,12 @@ export function ReportPage() {
 
       {/* Nav */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: '#9A9A9A', fontSize: '0.8125rem', padding: 0, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+        <button onClick={() => navigate(-1)} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '0.8125rem', padding: 0, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
           ← Back
         </button>
-        <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A1A', letterSpacing: '-0.01em' }}>Investigator Report</h1>
+        <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>Investigator Report</h1>
         {isDemo && (
-          <span style={{ background: '#F0EFEB', border: '1px solid #E8E6E1', color: '#6B6B6B', fontSize: '0.7rem', fontWeight: 600, borderRadius: '9999px', padding: '2px 10px', letterSpacing: '0.05em' }}>
+          <span style={{ background: 'var(--panel-soft)', border: '1px solid var(--border)', color: 'var(--muted)', fontSize: '0.7rem', fontWeight: 600, borderRadius: '9999px', padding: '2px 10px', letterSpacing: '0.05em' }}>
             DEMO
           </span>
         )}

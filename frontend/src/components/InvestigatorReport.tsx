@@ -35,25 +35,25 @@ export function InvestigatorReport({ report }: Props) {
 
       {/* Header row */}
       <div style={{
-        background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '12px',
-        padding: '20px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px',
+        padding: '20px 24px', boxShadow: '0 16px 40px rgba(3, 8, 20, 0.24)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: '16px',
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A1A' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)' }}>
               Case {claim_token.slice(0, 12).toUpperCase()}
             </h2>
             <span style={{
-              background: '#F0EFEB', border: '1px solid #E8E6E1',
-              color: '#6B6B6B', fontSize: '0.7rem', fontWeight: 600,
+              background: 'var(--panel-soft)', border: '1px solid var(--border)',
+              color: 'var(--muted)', fontSize: '0.7rem', fontWeight: 600,
               borderRadius: '9999px', padding: '2px 8px', letterSpacing: '0.05em',
             }}>
               #{factsheet_id}
             </span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#9A9A9A' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
             Generated {formatDateTime(generated_at)}
           </div>
         </div>
@@ -73,19 +73,19 @@ export function InvestigatorReport({ report }: Props) {
           { label: 'Combined Score',  value: analysis.combined_score,   sub: 'Ensemble weighted output' },
         ].map(card => (
           <div key={card.label} style={{
-            background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '12px',
-            padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px',
+            padding: '16px 20px', boxShadow: '0 16px 40px rgba(3, 8, 20, 0.2)',
           }}>
-            <div style={{ fontSize: '0.75rem', color: '#9A9A9A', marginBottom: '6px' }}>{card.label}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '6px' }}>{card.label}</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1A1A1A', lineHeight: 1 }}>
+              <span style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>
                 {Math.round(card.value)}
               </span>
-              <span style={{ fontSize: '0.875rem', color: '#9A9A9A' }}>/100</span>
+              <span style={{ fontSize: '0.875rem', color: 'var(--muted)' }}>/100</span>
             </div>
 
             {/* Score bar */}
-            <div style={{ marginTop: '10px', height: '4px', background: '#E8E6E1', borderRadius: '2px' }}>
+            <div style={{ marginTop: '10px', height: '4px', background: 'rgba(255,255,255,0.12)', borderRadius: '2px' }}>
               <div style={{
                 width:        `${card.value}%`,
                 height:       '100%',
@@ -95,17 +95,17 @@ export function InvestigatorReport({ report }: Props) {
               }} />
             </div>
 
-            <div style={{ fontSize: '0.7rem', color: '#9A9A9A', marginTop: '6px' }}>{card.sub}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '6px' }}>{card.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 16px 40px rgba(3, 8, 20, 0.2)' }}>
         {/* Tab bar */}
         <div style={{
-          display: 'flex', borderBottom: '1px solid #E8E6E1',
-          background: '#F7F6F3',
+          display: 'flex', borderBottom: '1px solid var(--border)',
+          background: 'var(--panel-alt)',
         }}>
           {tabs.map(tab => (
             <button
@@ -114,10 +114,10 @@ export function InvestigatorReport({ report }: Props) {
               style={{
                 flex:         1,
                 padding:      '12px 16px',
-                background:   activeTab === tab.key ? '#FFFFFF' : 'transparent',
+                background:   activeTab === tab.key ? 'rgba(255,255,255,0.05)' : 'transparent',
                 border:       'none',
-                borderBottom: activeTab === tab.key ? '2px solid #1A1A1A' : '2px solid transparent',
-                color:        activeTab === tab.key ? '#1A1A1A' : '#9A9A9A',
+                borderBottom: activeTab === tab.key ? '2px solid #57B7F8' : '2px solid transparent',
+                color:        activeTab === tab.key ? 'var(--text)' : 'var(--muted)',
                 fontSize:     '0.8125rem',
                 fontWeight:   activeTab === tab.key ? 600 : 400,
                 cursor:       'pointer',
@@ -154,27 +154,27 @@ export function InvestigatorReport({ report }: Props) {
           {/* EVIDENCE TAB */}
           {activeTab === 'evidence' && (
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <p style={{ fontSize: '0.8125rem', color: '#9A9A9A', marginBottom: '4px' }}>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '4px' }}>
                 GNNExplainer identified these graph edges as most predictive of fraud.
               </p>
               {analysis.gnn_evidence.map((ev, i) => (
                 <div key={i} style={{
-                  background: '#F7F6F3', border: '1px solid #E8E6E1', borderRadius: '10px',
+                  background: 'var(--panel-alt)', border: '1px solid var(--border)', borderRadius: '10px',
                   padding: '14px 16px',
                   borderLeft: `3px solid ${ev.importance_score >= 0.8 ? '#DC2626' : ev.importance_score >= 0.6 ? '#D97706' : '#6B6B6B'}`,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1A1A1A', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>
                         {ev.human_label}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.7rem', color: '#9A9A9A' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
                           {ev.source_token.slice(0, 12)} → {ev.target_token.slice(0, 12)}
                         </span>
                         <span style={{
-                          fontSize: '0.7rem', color: '#6B6B6B',
-                          background: '#F0EFEB', borderRadius: '4px', padding: '1px 6px',
+                          fontSize: '0.7rem', color: 'var(--muted)',
+                          background: 'var(--panel-soft)', border: '1px solid var(--border)', borderRadius: '4px', padding: '1px 6px',
                         }}>
                           {ev.edge_type}
                         </span>
@@ -182,10 +182,10 @@ export function InvestigatorReport({ report }: Props) {
                     </div>
                     {/* Importance bar */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1A1A1A' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text)' }}>
                         {Math.round(ev.importance_score * 100)}%
                       </span>
-                      <div style={{ width: '80px', height: '4px', background: '#E8E6E1', borderRadius: '2px' }}>
+                      <div style={{ width: '80px', height: '4px', background: 'rgba(255,255,255,0.12)', borderRadius: '2px' }}>
                         <div style={{
                           width: `${ev.importance_score * 100}%`, height: '100%', borderRadius: '2px',
                           background: ev.importance_score >= 0.8 ? '#DC2626' : ev.importance_score >= 0.6 ? '#D97706' : '#6B6B6B',
@@ -201,12 +201,12 @@ export function InvestigatorReport({ report }: Props) {
           {/* SHAP TAB */}
           {activeTab === 'shap' && (
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <p style={{ fontSize: '0.8125rem', color: '#9A9A9A', marginBottom: '4px' }}>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '4px' }}>
                 SHAP attributions explain the Isolation Forest's anomaly score.
               </p>
               {analysis.shap_features.map((feat, i) => (
                 <div key={i} style={{
-                  background: '#F7F6F3', border: '1px solid #E8E6E1', borderRadius: '10px',
+                  background: 'var(--panel-alt)', border: '1px solid var(--border)', borderRadius: '10px',
                   padding: '12px 16px',
                   display: 'flex', alignItems: 'center', gap: '12px',
                 }}>
@@ -221,7 +221,7 @@ export function InvestigatorReport({ report }: Props) {
 
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#1A1A1A' }}>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text)' }}>
                         {feat.feature_name.replace(/_/g, ' ')}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: '#6B6B6B', fontWeight: 600 }}>
@@ -229,7 +229,7 @@ export function InvestigatorReport({ report }: Props) {
                       </span>
                     </div>
                     {/* SHAP bar */}
-                    <div style={{ height: '6px', background: '#E8E6E1', borderRadius: '3px' }}>
+                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.12)', borderRadius: '3px' }}>
                       <div style={{
                         width: `${feat.contribution * 100}%`, height: '100%', borderRadius: '3px',
                         background: feat.direction === 'increases_risk' ? '#DC2626' : '#16A34A',
@@ -237,7 +237,7 @@ export function InvestigatorReport({ report }: Props) {
                       }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                      <span style={{ fontSize: '0.7rem', color: '#9A9A9A' }}>contribution</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>contribution</span>
                       <span style={{
                         fontSize: '0.7rem', fontWeight: 600,
                         color: feat.direction === 'increases_risk' ? '#DC2626' : '#16A34A',
@@ -257,12 +257,12 @@ export function InvestigatorReport({ report }: Props) {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px',
               }}>
-                <span style={{ fontSize: '0.8125rem', color: '#9A9A9A' }}>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--muted)' }}>
                   Generated by IBM Granite LLM
                 </span>
                 <span style={{
-                  background: '#F0EFEB', border: '1px solid #E8E6E1',
-                  color: '#6B6B6B', fontSize: '0.7rem', borderRadius: '4px', padding: '2px 8px',
+                  background: 'var(--panel-soft)', border: '1px solid var(--border)',
+                  color: 'var(--muted)', fontSize: '0.7rem', borderRadius: '4px', padding: '2px 8px',
                 }}>
                   AI-Generated
                 </span>
@@ -271,7 +271,7 @@ export function InvestigatorReport({ report }: Props) {
                 whiteSpace: 'pre-line',
                 fontSize:   '0.875rem',
                 lineHeight: '1.7',
-                color:      '#6B6B6B',
+                color:      'var(--text)',
               }}>
                 {narrative}
               </div>

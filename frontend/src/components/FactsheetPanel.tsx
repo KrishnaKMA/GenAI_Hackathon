@@ -29,12 +29,12 @@ export function FactsheetPanel({ entries, loading }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#1A1A1A' }}>
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>
           IBM watsonx.governance
         </h3>
         <span style={{
-          background: '#F0EFEB', border: '1px solid #E8E6E1',
-          color: '#9A9A9A', fontSize: '0.7rem', borderRadius: '4px', padding: '2px 8px',
+          background: 'var(--panel-soft)', border: '1px solid var(--border)',
+          color: 'var(--muted)', fontSize: '0.7rem', borderRadius: '999px', padding: '2px 8px',
         }}>
           AI Audit Trail
         </span>
@@ -42,8 +42,8 @@ export function FactsheetPanel({ entries, loading }: Props) {
 
       {entries.length === 0 && (
         <div style={{
-          background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '10px',
-          padding: '24px', textAlign: 'center', color: '#9A9A9A', fontSize: '0.875rem',
+          background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '10px',
+          padding: '24px', textAlign: 'center', color: 'var(--muted)', fontSize: '0.875rem',
         }}>
           No factsheet entries yet. Run an analysis to generate one.
         </div>
@@ -53,12 +53,13 @@ export function FactsheetPanel({ entries, loading }: Props) {
         <div
           key={entry.factsheet_id}
           style={{
-            background:   '#FFFFFF',
-            border:       '1px solid #E8E6E1',
+            background:   'var(--panel)',
+            border:       '1px solid var(--border)',
             borderRadius: '10px',
             padding:      '14px 16px',
             borderLeft:   `3px solid ${entry.decision === 'FLAGGED' ? '#DC2626' : '#16A34A'}`,
             transition:   'all 0.15s ease',
+            boxShadow:    '0 12px 32px rgba(3, 8, 20, 0.18)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
@@ -67,16 +68,16 @@ export function FactsheetPanel({ entries, loading }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{
                   fontFamily: 'monospace', fontSize: '0.8125rem',
-                  color: '#6B6B6B', fontWeight: 600,
+                  color: 'var(--text)', fontWeight: 600,
                 }}>
                   #{entry.factsheet_id}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: '#C4C4C4' }}>·</span>
-                <span style={{ fontSize: '0.75rem', color: '#9A9A9A' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--subtle)' }}>·</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
                   {entry.claim_token.slice(0, 14).toUpperCase()}
                 </span>
               </div>
-              <div style={{ fontSize: '0.7rem', color: '#C4C4C4' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--subtle)' }}>
                 {formatDateTime(entry.timestamp)} · {entry.model_version}
               </div>
             </div>
@@ -86,14 +87,14 @@ export function FactsheetPanel({ entries, loading }: Props) {
               <RiskChip riskLevel={entry.risk_level as any} />
 
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A1A', lineHeight: 1 }}>
-                  {Math.round(entry.combined_score)}<span style={{ fontSize: '0.75rem', color: '#9A9A9A' }}>/100</span>
+                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>
+                  {Math.round(entry.combined_score)}<span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>/100</span>
                 </div>
               </div>
 
               <span style={{
-                background:    entry.decision === 'FLAGGED' ? '#FEE2E2' : '#F0FDF4',
-                border:        `1px solid ${entry.decision === 'FLAGGED' ? '#FECACA' : '#BBF7D0'}`,
+                background:    entry.decision === 'FLAGGED' ? 'rgba(220, 38, 38, 0.14)' : 'rgba(22, 163, 74, 0.14)',
+                border:        `1px solid ${entry.decision === 'FLAGGED' ? 'rgba(248, 113, 113, 0.35)' : 'rgba(74, 222, 128, 0.35)'}`,
                 color:         entry.decision === 'FLAGGED' ? '#DC2626' : '#16A34A',
                 borderRadius:  '9999px',
                 padding:       '3px 10px',
@@ -107,7 +108,7 @@ export function FactsheetPanel({ entries, loading }: Props) {
           </div>
 
           {/* Footer */}
-          <div style={{ marginTop: '8px', fontSize: '0.7rem', color: '#C4C4C4' }}>
+          <div style={{ marginTop: '8px', fontSize: '0.7rem', color: 'var(--subtle)' }}>
             Adjuster: {entry.adjuster_id}
           </div>
         </div>

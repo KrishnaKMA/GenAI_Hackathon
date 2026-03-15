@@ -21,8 +21,8 @@ const STEP_ICONS = {
 }
 
 const STEP_COLORS = {
-  pending:  '#C4C4C4',
-  running:  '#1A1A1A',
+  pending:  'var(--subtle)',
+  running:  '#57B7F8',
   complete: '#16A34A',
   error:    '#DC2626',
 }
@@ -145,11 +145,11 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
 
   return (
     <div style={{
-      background:   '#FFFFFF',
-      border:       '1px solid #E8E6E1',
+      background:   'var(--panel)',
+      border:       '1px solid var(--border)',
       borderRadius: '12px',
       overflow:     'hidden',
-      boxShadow:    '0 1px 3px rgba(0,0,0,0.04)',
+      boxShadow:    '0 16px 40px rgba(3, 8, 20, 0.24)',
     }}>
       {/* Header */}
       <div style={{
@@ -157,14 +157,14 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
         alignItems:     'center',
         justifyContent: 'space-between',
         padding:        '14px 20px',
-        borderBottom:   '1px solid #E8E6E1',
-        background:     '#F7F6F3',
+        borderBottom:   '1px solid var(--border)',
+        background:     'var(--panel-alt)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {running && (
             <span style={{
               width: '8px', height: '8px', borderRadius: '50%',
-              background: '#1A1A1A',
+              background: '#57B7F8',
               display: 'inline-block',
               animation: 'score-pulse 1s ease-in-out infinite',
             }} />
@@ -172,12 +172,12 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
           {done && (
             <span style={{ color: '#16A34A', fontSize: '1rem' }}>✓</span>
           )}
-          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1A1A1A' }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)' }}>
             Fraud Agent
           </span>
           <span style={{
-            background: '#F0EFEB', border: '1px solid #E8E6E1',
-            color: '#6B6B6B', fontSize: '0.7rem', borderRadius: '4px', padding: '2px 8px',
+            background: 'var(--panel-soft)', border: '1px solid var(--border)',
+            color: 'var(--muted)', fontSize: '0.7rem', borderRadius: '4px', padding: '2px 8px',
           }}>
             {running ? 'Running' : done ? 'Complete' : 'Standby'}
           </span>
@@ -187,15 +187,15 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
           <button
             onClick={startAgent}
             style={{
-              background: '#1A1A1A', color: '#fff',
+              background: 'linear-gradient(135deg, #57B7F8, #4B7CF4)', color: '#08111f',
               border: 'none', borderRadius: '6px',
               fontSize: '0.75rem', fontWeight: 600,
               padding: '6px 14px', cursor: 'pointer',
               transition: 'background 0.15s ease',
               fontFamily: 'Inter, sans-serif',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#2D2D2D')}
-            onMouseLeave={e => (e.currentTarget.style.background = '#1A1A1A')}
+            onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.06)')}
+            onMouseLeave={e => (e.currentTarget.style.filter = 'brightness(1)')}
           >
             Run Agent
           </button>
@@ -215,9 +215,9 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
               width:          '24px',
               height:         '24px',
               borderRadius:   '50%',
-              background:     step.status === 'complete' ? '#F0FDF4' :
-                              step.status === 'running'  ? '#F0EFEB' :
-                              '#F7F6F3',
+              background:     step.status === 'complete' ? 'rgba(22, 163, 74, 0.12)' :
+                              step.status === 'running'  ? 'rgba(87, 183, 248, 0.14)' :
+                              'var(--panel-soft)',
               border:         `1px solid ${STEP_COLORS[step.status]}`,
               display:        'flex',
               alignItems:     'center',
@@ -237,7 +237,7 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
               <div style={{
                 fontSize:   '0.8125rem',
                 fontWeight: 500,
-                color:      step.status === 'pending' ? '#9A9A9A' : '#1A1A1A',
+                color:      step.status === 'pending' ? 'var(--muted)' : 'var(--text)',
                 transition: 'color 0.3s ease',
               }}>
                 {step.name}
@@ -247,7 +247,7 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
                 <div style={{
                   marginTop: '4px',
                   fontSize:  '0.75rem',
-                  color:     step.is_warning ? '#D97706' : '#9A9A9A',
+                  color:     step.is_warning ? '#D97706' : 'var(--muted)',
                   animation: 'fade-in 0.3s ease',
                 }}>
                   {step.result}
@@ -258,7 +258,7 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
                         marginLeft:     '8px',
                         background:     'transparent',
                         border:         'none',
-                        color:          '#1A1A1A',
+                        color:          'var(--text)',
                         fontSize:       '0.75rem',
                         cursor:         'pointer',
                         textDecoration: 'underline',
@@ -273,7 +273,7 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
             </div>
 
             {/* Step number */}
-            <span style={{ fontSize: '0.7rem', color: '#C4C4C4', flexShrink: 0, marginTop: '4px' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--subtle)', flexShrink: 0, marginTop: '4px' }}>
               {step.step_id}/4
             </span>
           </div>
@@ -296,24 +296,24 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background:   '#FFFFFF',
-              border:       '1px solid #E8E6E1',
+              background:   'var(--panel)',
+              border:       '1px solid var(--border)',
               borderRadius: '14px',
               padding:      '24px',
               maxWidth:     '600px',
               width:        '100%',
               maxHeight:    '80vh',
               overflow:     'auto',
-              boxShadow:    '0 8px 40px rgba(0,0,0,0.15)',
+              boxShadow:    '0 20px 60px rgba(0,0,0,0.35)',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1A1A1A' }}>SIU Referral Letter</span>
+              <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text)' }}>SIU Referral Letter</span>
               <button
                 onClick={() => setShowLetter(false)}
                 style={{
-                  background: '#F0EFEB', border: '1px solid #E8E6E1', borderRadius: '6px',
-                  color: '#6B6B6B', fontSize: '0.875rem', padding: '4px 10px',
+                  background: 'var(--panel-soft)', border: '1px solid var(--border)', borderRadius: '6px',
+                  color: 'var(--muted)', fontSize: '0.875rem', padding: '4px 10px',
                   cursor: 'pointer', fontFamily: 'Inter, sans-serif',
                 }}
               >
@@ -324,7 +324,7 @@ export function AgentStatus({ claimToken, analysis, autoStart = true }: Props) {
               whiteSpace:  'pre-wrap',
               fontSize:    '0.8125rem',
               lineHeight:  '1.65',
-              color:       '#6B6B6B',
+              color:       'var(--text)',
               fontFamily:  'Inter, -apple-system, sans-serif',
             }}>
               {letter}

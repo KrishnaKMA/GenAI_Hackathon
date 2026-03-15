@@ -17,11 +17,11 @@ interface Stats {
 
 function StatCard({ label, value, loading }: { label: string; value: number; loading: boolean }) {
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#9A9A9A', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+    <div style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', boxShadow: '0 16px 40px rgba(3, 8, 20, 0.32)' }}>
+      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
         {label}
       </div>
-      <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1A1A1A', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
         {loading ? '—' : value}
       </div>
     </div>
@@ -87,8 +87,8 @@ export function DashboardPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1A1A1A', letterSpacing: '-0.02em' }}>Dashboard</h1>
-          <p style={{ color: '#9A9A9A', fontSize: '0.8125rem', marginTop: '2px' }}>Welcome back, {user.username}</p>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>Dashboard</h1>
+          <p style={{ color: 'var(--muted)', fontSize: '0.8125rem', marginTop: '2px' }}>Welcome back, {user.username}</p>
         </div>
         <button onClick={() => navigate('/claims/new')} className="btn-primary">+ Submit Claim</button>
       </div>
@@ -107,7 +107,7 @@ export function DashboardPage() {
       {/* Main content */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px', alignItems: 'start' }}>
         <div>
-          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
+          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
             Recent Claims
           </div>
           <ClaimsTable claims={claims} loading={loading} onAnalyze={handleAnalyze} />

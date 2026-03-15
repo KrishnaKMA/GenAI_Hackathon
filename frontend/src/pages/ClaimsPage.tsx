@@ -46,9 +46,9 @@ export function ClaimsPage() {
   }
 
   const pillStyle = (active: boolean): React.CSSProperties => ({
-    background:   active ? '#1A1A1A' : '#F0EFEB',
-    color:        active ? '#FFFFFF' : '#6B6B6B',
-    border:       'none',
+    background:   active ? 'linear-gradient(135deg, #57B7F8, #4B7CF4)' : 'var(--panel-soft)',
+    color:        active ? '#08111f' : 'var(--muted)',
+    border:       active ? 'none' : '1px solid var(--border)',
     borderRadius: '9999px',
     padding:      '4px 12px',
     fontSize:     '0.75rem',
@@ -63,23 +63,23 @@ export function ClaimsPage() {
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1A1A1A', letterSpacing: '-0.02em' }}>All Claims</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>All Claims</h1>
         <button onClick={() => navigate('/claims/new')} className="btn-primary">+ Submit Claim</button>
       </div>
 
       {/* Filters */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '16px 20px', display: 'flex', gap: '28px', flexWrap: 'wrap', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 20px', display: 'flex', gap: '28px', flexWrap: 'wrap', alignItems: 'center', boxShadow: '0 16px 40px rgba(3, 8, 20, 0.24)' }}>
         <div>
-          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#9A9A9A', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Risk Level</div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Risk Level</div>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {RISK_FILTERS.map(r => (
               <button key={r} style={pillStyle(riskFilter === r)} onClick={() => { setRisk(r); setOffset(0) }}>{r}</button>
             ))}
           </div>
         </div>
-        <div style={{ width: '1px', height: '36px', background: '#E8E6E1' }} />
+        <div style={{ width: '1px', height: '36px', background: 'var(--border)' }} />
         <div>
-          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#9A9A9A', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Status</div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Status</div>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {STATUS_FILTERS.map(s => (
               <button key={s} style={pillStyle(statusFilter === s)} onClick={() => { setStatus(s as any); setOffset(0) }}>{s}</button>
@@ -96,7 +96,7 @@ export function ClaimsPage() {
         <button onClick={() => setOffset(o => Math.max(0, o - LIMIT))} disabled={offset === 0} className="btn-secondary" style={{ opacity: offset === 0 ? 0.4 : 1 }}>
           Previous
         </button>
-        <span style={{ color: '#9A9A9A', fontSize: '0.8125rem' }}>Page {Math.floor(offset / LIMIT) + 1}</span>
+        <span style={{ color: 'var(--muted)', fontSize: '0.8125rem' }}>Page {Math.floor(offset / LIMIT) + 1}</span>
         <button onClick={() => setOffset(o => o + LIMIT)} disabled={claims.length < LIMIT} className="btn-secondary" style={{ opacity: claims.length < LIMIT ? 0.4 : 1 }}>
           Next
         </button>
