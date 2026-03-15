@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ClaimRecord, InvestigatorReport, FactsheetEntry } from '../types'
-import { claimsApi, adminApi, analysisApi } from '../lib/api'
+import { claimsApi, adminApi, analysisApi, cacheReport } from '../lib/api'
 import { MOCK_CLAIMS, MOCK_FACTSHEETS } from '../lib/mockData'
 import { ClaimsTable } from '../components/ClaimsTable'
 import { FactsheetPanel } from '../components/FactsheetPanel'
@@ -39,35 +39,41 @@ export function DashboardPage() {
   const user = JSON.parse(localStorage.getItem('cs_user') || '{}')
 
   useEffect(() => {
+    let cancelled = false
     const load = async () => {
       try {
-        const [claimsData, sheetsData] = await Promise.all([
-          claimsApi.list({ limit: 20 }),
+        const requests: Promise<unknown>[] = [
+          claimsApi.list({ limit: 20, offset: 0 }),
           claimsApi.getFactsheets(10),
-        ])
-        setClaims(claimsData)
-        setSheets(sheetsData)
+        ]
         if (user.role === 'admin') {
-          try {
-            const statsData = await adminApi.getStats()
-            setStats(statsData)
-          } catch { /* non-admin */ }
+          requests.push(adminApi.getStats())
+        }
+        const [claimsData, sheetsData, statsData] = await Promise.all(requests)
+        if (cancelled) return
+        setClaims(claimsData as ClaimRecord[])
+        setSheets(sheetsData as FactsheetEntry[])
+        if (statsData) {
+          setStats(statsData as Stats)
         }
       } catch {
-        setClaims(MOCK_CLAIMS)
-        setSheets(MOCK_FACTSHEETS)
+        if (cancelled) return
+        if (claims.length === 0) setClaims(MOCK_CLAIMS)
+        if (sheets.length === 0) setSheets(MOCK_FACTSHEETS)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     load()
+    return () => { cancelled = true }
   }, [])
 
   const handleAnalyze = async (token: string) => {
     setAnalyzing(token)
     try {
-      await analysisApi.analyze(token)
-      const refreshed = await claimsApi.list({ limit: 20 })
+      const report = await analysisApi.analyze(token)
+      cacheReport(report)
+      const refreshed = await claimsApi.list({ limit: 20, offset: 0 })
       setClaims(refreshed)
     } catch {
       setClaims(prev => prev.map(c => c.claim_token === token ? { ...c, status: 'analyzed' } : c))

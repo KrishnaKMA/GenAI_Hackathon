@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ClaimRecord, RiskLevel, ClaimStatus } from '../types'
-import { claimsApi, analysisApi } from '../lib/api'
+import { claimsApi, analysisApi, cacheReport } from '../lib/api'
 import { MOCK_CLAIMS } from '../lib/mockData'
 import { ClaimsTable } from '../components/ClaimsTable'
 
@@ -17,28 +17,40 @@ export function ClaimsPage() {
   const [offset, setOffset]       = useState(0)
   const LIMIT = 20
 
-  const fetchClaims = async () => {
-    setLoading(true)
-    try {
-      const data = await claimsApi.list({
-        limit:      LIMIT,
-        offset,
-        risk_level: riskFilter === 'ALL' ? undefined : riskFilter,
-        status:     statusFilter === 'ALL' ? undefined : statusFilter,
-      })
-      setClaims(data)
-    } catch {
-      setClaims(MOCK_CLAIMS)
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    let cancelled = false
 
-  useEffect(() => { fetchClaims() }, [riskFilter, statusFilter, offset])
+    const fetchClaims = async () => {
+      setLoading(prev => prev && claims.length === 0)
+      try {
+        const data = await claimsApi.list({
+          limit:      LIMIT,
+          offset,
+          risk_level: riskFilter === 'ALL' ? undefined : riskFilter,
+          status:     statusFilter === 'ALL' ? undefined : statusFilter,
+        })
+        if (!cancelled) {
+          setClaims(data)
+        }
+      } catch {
+        if (!cancelled && claims.length === 0) {
+          setClaims(MOCK_CLAIMS)
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchClaims()
+    return () => { cancelled = true }
+  }, [riskFilter, statusFilter, offset])
 
   const handleAnalyze = async (token: string) => {
     try {
-      await analysisApi.analyze(token)
+      const report = await analysisApi.analyze(token)
+      cacheReport(report)
       navigate(`/report/${token}`)
     } catch {
       navigate(`/report/${token}`)

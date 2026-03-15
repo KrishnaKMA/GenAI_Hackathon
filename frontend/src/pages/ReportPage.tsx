@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import type { InvestigatorReport } from '../types'
-import { analysisApi } from '../lib/api'
+import { analysisApi, cacheReport, getCachedReport } from '../lib/api'
 import { InvestigatorReport as ReportComponent } from '../components/InvestigatorReport'
 import { MOCK_CRITICAL_REPORT } from '../lib/mockData'
 
@@ -16,25 +16,38 @@ export function ReportPage() {
   const [error, setError]     = useState('')
 
   useEffect(() => {
+    let cancelled = false
     const load = async () => {
+      const cachedReport = claimToken ? getCachedReport(claimToken) : null
+      if (cachedReport) {
+        setReport(cachedReport)
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
       setError('')
       try {
         if (isDemo) {
           const stored = sessionStorage.getItem('demo_report')
-          if (stored) { setReport(JSON.parse(stored)); return }
+          if (stored) {
+            if (!cancelled) setReport(JSON.parse(stored))
+            return
+          }
         }
         if (!claimToken) return
         const result = await analysisApi.analyze(claimToken)
-        setReport(result)
+        cacheReport(result)
+        if (!cancelled) setReport(result)
       } catch (err: any) {
         console.warn('[ReportPage] API error, using mock:', err?.message)
-        setReport(MOCK_CRITICAL_REPORT)
+        if (!cancelled) setReport(MOCK_CRITICAL_REPORT)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     load()
+    return () => { cancelled = true }
   }, [claimToken, isDemo])
 
   return (
