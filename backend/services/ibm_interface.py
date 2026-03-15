@@ -33,11 +33,12 @@ from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 from ibm_aigov_facts_client import AIGovFactsClient
 
-# ─────────────────────────────────────────────────────────
+
+
 # AUTO-DETECTION
 # Real IBM calls run when WATSONX_API_KEY is present.
 # Falls back to local JSON mock when credentials are missing.
-# ─────────────────────────────────────────────────────────
+
 WATSONX_API_KEY    = os.getenv("WATSONX_API_KEY")
 WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
 WATSONX_SPACE_ID   = os.getenv("WATSONX_SPACE_ID")   # needed for governance
@@ -54,9 +55,8 @@ if USE_MOCK:
 else:
     print("[IBM] OK: IBM credentials found -- using REAL watsonx services")
 
-# ─────────────────────────────────────────────────────────
+
 # CLIENT INITIALIZATION (only when credentials present)
-# ─────────────────────────────────────────────────────────
 watsonx_client = None
 granite_model  = None
 facts_client   = None  # watsonx.governance client
@@ -108,12 +108,11 @@ if not USE_MOCK:
         print("[IBM] WARNING: No WATSONX_SPACE_ID or WATSONX_PROJECT_ID -- governance disabled")
 
 
-# ─────────────────────────────────────────────────────────
+
 # FUNCTION 1 — Granite narrative generation
 # Called by: services/report_generator.py
 # Input:  FraudAnalysisResult (scores + evidence)
 # Output: 3-paragraph plain English investigator report string
-# ─────────────────────────────────────────────────────────
 async def generate_narrative(analysis: FraudAnalysisResult) -> str:
     if USE_MOCK:
         return _mock_narrative(analysis)
@@ -192,12 +191,11 @@ def _mock_narrative(analysis: FraudAnalysisResult) -> str:
         )
 
 
-# ─────────────────────────────────────────────────────────
+
 # FUNCTION 2 — Log factsheet to watsonx.governance
 # Called by: api/routes/analysis.py after every analysis
 # Input:  claim_token + FraudAnalysisResult + adjuster_id
 # Output: factsheet_id string
-# ─────────────────────────────────────────────────────────
 async def log_factsheet(claim_token: str, analysis: FraudAnalysisResult, adjuster_id: str) -> str:
     if USE_MOCK:
         return _mock_log_factsheet(claim_token, analysis, adjuster_id)
@@ -265,11 +263,10 @@ def _mock_log_factsheet(claim_token: str, analysis: FraudAnalysisResult, adjuste
     return factsheet_id
 
 
-# ─────────────────────────────────────────────────────────
+
 # FUNCTION 3 — Fetch factsheets from watsonx.governance
 # Called by: api/routes/claims.py  GET /factsheets
 # Output: list of FactsheetEntry
-# ─────────────────────────────────────────────────────────
 async def get_factsheets(limit: int = 10) -> list[FactsheetEntry]:
     if USE_MOCK:
         return _mock_get_factsheets(limit)

@@ -1,10 +1,10 @@
 """
 ╔══════════════════════════════════════════════════════════╗
-║         IBM DEBUG TOOL — ClaimShield                    ║
+║         IBM DEBUG TOOL — ClaimShield                     ║
 ║                                                          ║
 ║  Run this to diagnose any IBM integration issue:         ║
 ║    cd backend                                            ║
-║    python scripts/debug_ibm.py                          ║
+║    python scripts/debug_ibm.py                           
 ║                                                          ║
 ║  Tests all three IBM components in order:                ║
 ║    1. Environment / credentials                          ║
