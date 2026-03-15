@@ -45,6 +45,7 @@ type CacheEntry<T> = {
 const responseCache = new Map<string, CacheEntry<unknown>>()
 const inflightRequests = new Map<string, Promise<unknown>>()
 const CACHE_STORAGE_PREFIX = 'cs_cache_'
+const REPORT_STORAGE_PREFIX = 'cs_report_'
 
 function getCachedValue<T>(key: string): T | null {
   const entry = responseCache.get(key)
@@ -123,17 +124,68 @@ function claimListCacheKey(params: ClaimListParams): string {
 }
 
 export function cacheReport(report: InvestigatorReport) {
-  sessionStorage.setItem(`cs_report_${report.claim_token}`, JSON.stringify(report))
+  sessionStorage.setItem(`${REPORT_STORAGE_PREFIX}${report.claim_token}`, JSON.stringify(report))
 }
 
 export function getCachedReport(claimToken: string): InvestigatorReport | null {
-  const stored = sessionStorage.getItem(`cs_report_${claimToken}`)
+  const stored = sessionStorage.getItem(`${REPORT_STORAGE_PREFIX}${claimToken}`)
   if (!stored) return null
   try {
     return JSON.parse(stored) as InvestigatorReport
   } catch {
-    sessionStorage.removeItem(`cs_report_${claimToken}`)
+    sessionStorage.removeItem(`${REPORT_STORAGE_PREFIX}${claimToken}`)
     return null
+  }
+}
+
+function removeCachedValue(key: string) {
+  responseCache.delete(key)
+  inflightRequests.delete(key)
+  sessionStorage.removeItem(`${CACHE_STORAGE_PREFIX}${key}`)
+}
+
+export function invalidateClaimsCache() {
+  for (const key of Array.from(responseCache.keys())) {
+    if (key.startsWith('claims:')) {
+      removeCachedValue(key)
+    }
+  }
+  for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+    const storageKey = sessionStorage.key(index)
+    if (storageKey?.startsWith(`${CACHE_STORAGE_PREFIX}claims:`)) {
+      sessionStorage.removeItem(storageKey)
+    }
+  }
+}
+
+export function invalidateFactsheetsCache() {
+  for (const key of Array.from(responseCache.keys())) {
+    if (key.startsWith('factsheets:')) {
+      removeCachedValue(key)
+    }
+  }
+  for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+    const storageKey = sessionStorage.key(index)
+    if (storageKey?.startsWith(`${CACHE_STORAGE_PREFIX}factsheets:`)) {
+      sessionStorage.removeItem(storageKey)
+    }
+  }
+}
+
+export function invalidateAdminStatsCache() {
+  removeCachedValue('admin:stats')
+}
+
+export function invalidateReportCache(claimToken?: string) {
+  if (claimToken) {
+    sessionStorage.removeItem(`${REPORT_STORAGE_PREFIX}${claimToken}`)
+    return
+  }
+  for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+    const storageKey = sessionStorage.key(index)
+    if (storageKey?.startsWith(REPORT_STORAGE_PREFIX)) {
+      sessionStorage.removeItem(storageKey)
+    }
   }
 }
 
@@ -179,6 +231,8 @@ export const claimsApi = {
     const { data } = await apiClient.post<ClaimRecord>('/claims', payload, {
       timeout: 45000,
     })
+    invalidateClaimsCache()
+    invalidateAdminStatsCache()
     return data
   },
 
@@ -197,6 +251,10 @@ export const analysisApi = {
     const { data } = await apiClient.post<InvestigatorReport>(`/analyze/${claimToken}`, undefined, {
       timeout: 90000,
     })
+    cacheReport(data)
+    invalidateClaimsCache()
+    invalidateFactsheetsCache()
+    invalidateAdminStatsCache()
     return data
   },
 

@@ -44,11 +44,16 @@ export function SubmitClaimPage() {
 
   const handleAnalyze = async () => {
     setAnalyzing(true)
+    setError('')
     try {
-      await analysisApi.analyze(claimToken)
+      const report = await analysisApi.analyze(claimToken)
+      if (report?.claim_token) {
+        navigate(`/report/${claimToken}`)
+        return
+      }
       navigate(`/report/${claimToken}`)
-    } catch {
-      navigate(`/report/${claimToken}`)
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Failed to analyze claim')
     } finally {
       setAnalyzing(false)
     }
@@ -95,6 +100,9 @@ export function SubmitClaimPage() {
             Token: <span style={{ fontFamily: 'monospace', color: 'var(--text)', fontWeight: 600 }}>{claimToken}</span>
           </p>
           <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '24px' }}>PII has been tokenized. Run analysis to detect fraud patterns.</p>
+          {error && (
+            <div style={{ background: '#FEE2E2', border: '1px solid #FECACA', borderRadius: '8px', padding: '10px 14px', color: '#DC2626', fontSize: '0.8125rem', marginBottom: '16px' }}>{error}</div>
+          )}
           <button onClick={handleAnalyze} disabled={analyzing} className="btn-primary" style={{ minWidth: '200px', opacity: analyzing ? 0.6 : 1 }}>
             {analyzing ? 'Running analysis...' : 'Analyze for Fraud'}
           </button>
