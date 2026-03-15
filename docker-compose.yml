@@ -32,6 +32,10 @@ services:
       - ./backend/.env
     environment:
       - FRONTEND_URL=http://localhost:5173
+      - DB_BACKEND=db2
+      - DB_CONNECT_RETRIES=30
+      - DB_CONNECT_DELAY_SECONDS=10
+      - DB2_DATABASE=CLAIMDB
       - DB2_DSN=DATABASE=CLAIMDB;HOSTNAME=db2;PORT=50000;PROTOCOL=TCPIP;UID=db2inst1;PWD=${DB2_PASSWORD:-ClaimShield123};
     depends_on:
       - db2
@@ -41,6 +45,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 360s
 
   frontend:
     build:
@@ -54,7 +59,8 @@ services:
 
 # ─────────────────────────────────────────────────────────
 # Run:
-#   docker compose up --build
+#   powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-local-db2.ps1
+#   or: docker compose up --build
 #   Open: http://localhost:5173
 #   API:  http://localhost:8000/docs
 # ─────────────────────────────────────────────────────────

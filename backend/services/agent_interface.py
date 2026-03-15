@@ -18,6 +18,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import AsyncGenerator
 from models.schemas import FraudAnalysisResult, AgentStepUpdate
+from core import database as db
 
 
 async def run_fraud_agent(
@@ -98,6 +99,7 @@ async def run_fraud_agent(
     yield AgentStepUpdate(step_id=4, name="Task Scheduled", status="running")
     await asyncio.sleep(0.5)
     due = (datetime.utcnow() + timedelta(hours=48)).strftime("%Y-%m-%d %H:%M UTC")
+    await _schedule_siu_task(claim_token, due)
     yield AgentStepUpdate(
         step_id=4,
         name="Task Scheduled",
@@ -148,3 +150,28 @@ This case has been assigned to your queue with a 48-hour investigation deadline.
 
 ClaimShield Automated Fraud Detection System
 Powered by IBM watsonx.ai"""
+
+
+async def _schedule_siu_task(claim_token: str, due_at: str) -> None:
+    """
+    Persist the agent-created investigation task. This keeps the agent flow
+    useful even before a richer IBM task orchestration layer is added.
+    """
+    existing = await db.fetch_one(
+        """SELECT id FROM tasks
+           WHERE claim_token = ? AND assigned_to = ? AND status = ?
+           ORDER BY created_at DESC LIMIT 1""",
+        (claim_token, "SIU_TEAM", "open"),
+    )
+    if existing:
+        await db.execute(
+            "UPDATE tasks SET due_at = ? WHERE id = ?",
+            (due_at, existing["id"]),
+        )
+        return
+
+    await db.execute(
+        """INSERT INTO tasks (claim_token, assigned_to, due_at, status, created_at)
+           VALUES (?,?,?,?,?)""",
+        (claim_token, "SIU_TEAM", due_at, "open", datetime.utcnow().isoformat()),
+    )

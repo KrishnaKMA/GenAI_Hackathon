@@ -23,21 +23,37 @@ except ImportError:
  
 
 # AUTO-DETECTION
-# Essentially detects if DB2 is active if not defaults to SQLite
+# Supports:
+# - DB_BACKEND=db2    -> force Db2
+# - DB_BACKEND=sqlite -> force SQLite
+# - DB_BACKEND=auto   -> use Db2 when DB2_DSN is present, else SQLite
+DB_BACKEND = os.getenv("DB_BACKEND", "auto").strip().lower()
+if DB_BACKEND not in {"auto", "db2", "sqlite"}:
+    print(f"[DB] WARNING: Unknown DB_BACKEND={DB_BACKEND!r} -- falling back to auto")
+    DB_BACKEND = "auto"
+
 DB2_DSN = os.getenv("DB2_DSN")
-USE_DB2 = bool(DB2_DSN and ibm_db is not None)
+DB_CONNECT_RETRIES = max(1, int(os.getenv("DB_CONNECT_RETRIES", "30")))
+DB_CONNECT_DELAY_SECONDS = max(1, int(os.getenv("DB_CONNECT_DELAY_SECONDS", "10")))
+USE_DB2 = bool(
+    ibm_db is not None and (
+        DB_BACKEND == "db2" or (DB_BACKEND == "auto" and DB2_DSN)
+    )
+)
 
 
 # Detect database location of SQLITE
 SQLITE_PATH = Path("data/local.db")
 SQLITE_PATH.parent.mkdir(exist_ok=True)
  
-if DB2_DSN and ibm_db is None:
+if DB_BACKEND == "db2" and ibm_db is None:
+    print("[DB] WARNING: DB_BACKEND=db2 but ibm_db is not installed -- falling back to SQLite")
+elif DB2_DSN and ibm_db is None:
     print("[DB] WARNING: DB2_DSN set but ibm_db is not installed -- falling back to SQLite")
 elif USE_DB2:
-    print("[DB] OK: DB2_DSN found -- using IBM Db2")
+    print(f"[DB] OK: backend={DB_BACKEND} -- using IBM Db2")
 else:
-    print("[DB] WARNING: DB2_DSN not set -- using SQLite at", SQLITE_PATH)
+    print(f"[DB] OK: backend={DB_BACKEND} -- using SQLite at {SQLITE_PATH}")
  
  
 
@@ -224,7 +240,7 @@ def _db2_close(conn):
 def _db2_row_to_dict(stmt) -> Optional[dict]:
     """Fetch one row from a Db2 statement as a dict, or None."""
     row = ibm_db.fetch_assoc(stmt)
-    return dict(row) if row else None
+    return {str(key).lower(): value for key, value in dict(row).items()} if row else None
  
  
 def _db2_all_rows(stmt) -> list[dict]:
@@ -232,7 +248,7 @@ def _db2_all_rows(stmt) -> list[dict]:
     rows = []
     row = ibm_db.fetch_assoc(stmt)
     while row:
-        rows.append(dict(row))
+        rows.append({str(key).lower(): value for key, value in dict(row).items()})
         row = ibm_db.fetch_assoc(stmt)
     return rows
  
@@ -262,7 +278,7 @@ async def create_tables():
     if USE_DB2:
         def _create():
             last_error = None
-            for attempt in range(1, 31):
+            for attempt in range(1, DB_CONNECT_RETRIES + 1):
                 try:
                     conn = _db2_connect()
                     try:
@@ -273,8 +289,8 @@ async def create_tables():
                         _db2_close(conn)
                 except Exception as exc:
                     last_error = exc
-                    print(f"[DB] Waiting for Db2 to accept connections ({attempt}/30): {exc}")
-                    time.sleep(10)
+                    print(f"[DB] Waiting for Db2 to accept connections ({attempt}/{DB_CONNECT_RETRIES}): {exc}")
+                    time.sleep(DB_CONNECT_DELAY_SECONDS)
             raise last_error
 
         await asyncio.to_thread(_create)

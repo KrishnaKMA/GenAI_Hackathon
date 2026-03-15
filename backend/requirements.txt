@@ -9,7 +9,7 @@ uvicorn[standard]==0.30.6
 pydantic==2.9.2
 
 # Auth
-PyJWT==2.9.0
+PyJWT==2.10.1
 bcrypt==4.2.0
 pyotp==2.9.0
 
@@ -29,17 +29,19 @@ python-dotenv==1.0.1
 # TEAMMATE A — ML dependencies (install when ready)
 # Uncomment these when you have your model files:
 # ─────────────────────────────────────────────────────────
-# torch==2.4.0
-# torch-geometric==2.6.0
-# scikit-learn==1.5.2
-# shap==0.46.0
-# numpy==1.26.4
+torch==2.4.0
+torch-geometric==2.6.0
+scikit-learn==1.6.1
+shap==0.46.0
+numpy==1.26.4
+pandas==2.3.3
+lightgbm==4.6.0
 
 # ─────────────────────────────────────────────────────────
 # TEAMMATE B — IBM dependencies (install when credentials ready)
 # Uncomment these when you have WATSONX_API_KEY:
 # ─────────────────────────────────────────────────────────
 ibm-db
-# ibm-watsonx-ai
-# ibm-aigov-facts-client
+ibm-watsonx-ai==1.5.3
+ibm-aigov-facts-client==1.0.105
 

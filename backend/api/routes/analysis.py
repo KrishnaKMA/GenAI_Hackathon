@@ -10,6 +10,7 @@ from models.schemas import InvestigatorReport, FraudAnalysisResult, TokenPayload
 from services.ml_interface import run_fraud_analysis
 from services.report_generator import generate_report
 from services.claim_ingestor import build_claim_data_dict, update_claim_score
+from services.graph_builder import update_entity_scores
 from core import database as db
 from core.exceptions import ClaimNotFound, AnalysisError
 from api.deps import require_adjuster
@@ -50,6 +51,7 @@ async def analyze_claim(
 
     # Update claim status in DB
     await update_claim_score(claim_token, analysis.combined_score, analysis.risk_level)
+    await update_entity_scores(analysis.graph_nodes)
 
     # Generate full report (narrative + factsheet)
     report = await generate_report(claim_token, analysis, user.sub)

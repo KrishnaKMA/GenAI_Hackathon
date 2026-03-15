@@ -9,6 +9,8 @@ from datetime import datetime
 from models.schemas import ClaimInput, ClaimRecord
 from core.security import PiiTokenizer
 from core import database as db
+from models.schemas import GraphEdge
+from services.graph_builder import store_graph_edges
 
 
 async def ingest_claim(claim: ClaimInput) -> ClaimRecord:
@@ -47,27 +49,37 @@ async def ingest_claim(claim: ClaimInput) -> ClaimRecord:
         created_at            = datetime.utcnow().isoformat(),
     )
 
-    # Insert into DB (ignore if claim_token already exists)
-    await db.execute(
-        """INSERT OR IGNORE INTO claims
-           (claim_token, claim_amount, claim_type, incident_date, filing_date,
-            prior_claim_count, days_since_last_claim, claimant_token,
-            provider_token, repair_shop_token, adjuster_id, status, created_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-        (
-            record.claim_token, record.claim_amount, record.claim_type,
-            record.incident_date, record.filing_date, record.prior_claim_count,
-            record.days_since_last_claim, record.claimant_token,
-            record.provider_token, record.repair_shop_token,
-            record.adjuster_id, record.status, record.created_at,
-        ),
+    # Db2 does not support SQLite's INSERT OR IGNORE, so perform an explicit
+    # existence check before inserting the claim.
+    existing_claim = await db.fetch_one(
+        "SELECT claim_token FROM claims WHERE claim_token = ?",
+        (record.claim_token,),
     )
+    if not existing_claim:
+        await db.execute(
+            """INSERT INTO claims
+               (claim_token, claim_amount, claim_type, incident_date, filing_date,
+                prior_claim_count, days_since_last_claim, claimant_token,
+                provider_token, repair_shop_token, adjuster_id, status, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                record.claim_token, record.claim_amount, record.claim_type,
+                record.incident_date, record.filing_date, record.prior_claim_count,
+                record.days_since_last_claim, record.claimant_token,
+                record.provider_token, record.repair_shop_token,
+                record.adjuster_id, record.status, record.created_at,
+            ),
+        )
 
     # Upsert entities
     await _upsert_entity(claimant_token, "CLAIMANT")
     await _upsert_entity(provider_token, "PROVIDER")
     if repair_shop_token:
         await _upsert_entity(repair_shop_token, "REPAIR_SHOP")
+
+    # Persist the graph relationships created by this claim so the ML layer has
+    # a real neighborhood graph to inspect on subsequent analyses.
+    await store_graph_edges(_build_claim_edges(record))
 
     return record
 
@@ -89,6 +101,45 @@ async def _upsert_entity(token: str, entity_type: str) -> None:
             "VALUES (?,?,1,0.0,0,?)",
             (token, entity_type, now),
         )
+
+
+def _build_claim_edges(record: ClaimRecord) -> list[GraphEdge]:
+    """
+    Translate the filed claim into graph relationships the GNN layer can use.
+    These are the same relationship types rendered in the frontend graph.
+    """
+    timestamp = record.incident_date or record.filing_date or datetime.utcnow().date().isoformat()
+    edges = [
+        GraphEdge(
+            source=record.claimant_token,
+            target=record.provider_token,
+            weight=1,
+            edge_type="treated_by",
+            timestamp=timestamp,
+        ),
+    ]
+
+    if record.repair_shop_token:
+        edges.append(
+            GraphEdge(
+                source=record.claimant_token,
+                target=record.repair_shop_token,
+                weight=1,
+                edge_type="repaired_by",
+                timestamp=timestamp,
+            )
+        )
+        edges.append(
+            GraphEdge(
+                source=record.provider_token,
+                target=record.repair_shop_token,
+                weight=1,
+                edge_type="referred_to",
+                timestamp=timestamp,
+            )
+        )
+
+    return edges
 
 
 def build_claim_data_dict(record: ClaimRecord) -> dict:

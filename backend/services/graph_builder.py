@@ -61,6 +61,73 @@ async def get_entity_neighbors(entity_token: str, depth: int = 2) -> Tuple[List[
     return nodes, edges
 
 
+async def get_claim_subgraph(claim_data: dict) -> Tuple[List[GraphNode], List[GraphEdge]]:
+    """
+    Build the local graph neighborhood relevant to a single claim by merging
+    the claimant/provider/shop neighborhoods already stored in the database.
+    """
+    seed_tokens = [
+        claim_data.get("claimant_token"),
+        claim_data.get("provider_token"),
+        claim_data.get("repair_shop_token"),
+    ]
+    seed_tokens = [token for token in seed_tokens if token]
+
+    merged_nodes: dict[str, GraphNode] = {}
+    merged_edges: dict[tuple[str, str, str, str], GraphEdge] = {}
+
+    for token in seed_tokens:
+        nodes, edges = await get_entity_neighbors(token)
+        for node in nodes:
+            merged_nodes[node.id] = node
+        for edge in edges:
+            key = (edge.source, edge.target, edge.edge_type, edge.timestamp)
+            merged_edges[key] = edge
+
+    # Guarantee the current claim's primary relationship edges are present even
+    # if this is the first time the entities appear in the graph.
+    timestamp = claim_data.get("incident_date") or claim_data.get("filing_date") or ""
+    claimant = claim_data.get("claimant_token")
+    provider = claim_data.get("provider_token")
+    shop = claim_data.get("repair_shop_token")
+
+    if claimant and provider:
+        merged_edges.setdefault(
+            (claimant, provider, "treated_by", timestamp),
+            GraphEdge(
+                source=claimant,
+                target=provider,
+                edge_type="treated_by",
+                weight=1,
+                timestamp=timestamp,
+            ),
+        )
+    if claimant and shop:
+        merged_edges.setdefault(
+            (claimant, shop, "repaired_by", timestamp),
+            GraphEdge(
+                source=claimant,
+                target=shop,
+                edge_type="repaired_by",
+                weight=1,
+                timestamp=timestamp,
+            ),
+        )
+    if provider and shop:
+        merged_edges.setdefault(
+            (provider, shop, "referred_to", timestamp),
+            GraphEdge(
+                source=provider,
+                target=shop,
+                edge_type="referred_to",
+                weight=1,
+                timestamp=timestamp,
+            ),
+        )
+
+    return list(merged_nodes.values()), list(merged_edges.values())
+
+
 def build_adjacency_list(nodes: List[GraphNode], edges: List[GraphEdge]) -> dict:
     """
     Returns an adjacency list dict for use with PyG or NetworkX.
@@ -117,7 +184,42 @@ async def store_graph_edges(edges: List[GraphEdge]) -> None:
     """Persist graph edges to the database (for history + replay)."""
     if not edges:
         return
-    await db.execute_many(
-        "INSERT OR IGNORE INTO graph_edges (source, target, edge_type, weight, timestamp) VALUES (?,?,?,?,?)",
-        [(e.source, e.target, e.edge_type, e.weight, e.timestamp) for e in edges],
+    existing_rows = await db.fetch_all(
+        "SELECT source, target, edge_type, timestamp FROM graph_edges"
     )
+    existing_keys = {
+        (row["source"], row["target"], row["edge_type"], row["timestamp"])
+        for row in existing_rows
+    }
+    new_edges = [
+        (e.source, e.target, e.edge_type, e.weight, e.timestamp)
+        for e in edges
+        if (e.source, e.target, e.edge_type, e.timestamp) not in existing_keys
+    ]
+    if new_edges:
+        await db.execute_many(
+            "INSERT INTO graph_edges (source, target, edge_type, weight, timestamp) VALUES (?,?,?,?,?)",
+            new_edges,
+        )
+
+
+async def update_entity_scores(nodes: List[GraphNode]) -> None:
+    """
+    Persist model feedback onto entity rows so future graph lookups reflect the
+    latest fraud scores and flags.
+    """
+    if not nodes:
+        return
+
+    for node in nodes:
+        await db.execute(
+            """UPDATE entities
+               SET fraud_score = ?, is_flagged = ?, claim_count = ?, last_seen = CURRENT_TIMESTAMP
+               WHERE entity_token = ?""",
+            (
+                node.fraud_score,
+                1 if node.is_flagged else 0,
+                node.claim_count,
+                node.id,
+            ),
+        )

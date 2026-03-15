@@ -50,15 +50,31 @@ WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
 WATSONX_SPACE_ID   = os.getenv("WATSONX_SPACE_ID")   # needed for governance
 WATSONX_URL        = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com")
 DB2_DSN            = os.getenv("DB2_DSN")
-USE_MOCK           = not bool(WATSONX_API_KEY and WATSONX_PROJECT_ID and IBM_IMPORTS_AVAILABLE)
+
+
+def _looks_real_secret(value: str | None) -> bool:
+    if not value:
+        return False
+    lowered = value.strip().lower()
+    return lowered not in {"claimshield-api", "your-api-key-here", "changeme", "placeholder"}
+
+
+def _ibm_setup_hint() -> str:
+    return "Set a real IBM Cloud IAM API key in WATSONX_API_KEY and a Db2 DSN in DB2_DSN to enable live IBM services."
+
+
+USE_MOCK = not bool(
+    _looks_real_secret(WATSONX_API_KEY) and WATSONX_PROJECT_ID and IBM_IMPORTS_AVAILABLE
+)
 
 LOCAL_FACTSHEETS_PATH = Path("data/local_factsheets.json")
 LOCAL_FACTSHEETS_PATH.parent.mkdir(exist_ok=True)
 
-if WATSONX_API_KEY and WATSONX_PROJECT_ID and not IBM_IMPORTS_AVAILABLE:
+if _looks_real_secret(WATSONX_API_KEY) and WATSONX_PROJECT_ID and not IBM_IMPORTS_AVAILABLE:
     print("[IBM] WARNING: IBM credentials found but SDKs are not installed -- using MOCK IBM services")
 elif USE_MOCK:
-    print("[IBM] WARNING: WATSONX_API_KEY not found -- using MOCK IBM services")
+    print("[IBM] WARNING: WATSONX credentials are missing or placeholder-level -- using MOCK IBM services")
+    print(f"[IBM] ACTION: {_ibm_setup_hint()}")
     print("[IBM] Factsheets stored locally at:", LOCAL_FACTSHEETS_PATH)
 else:
     print("[IBM] OK: IBM credentials found -- using REAL watsonx services")
@@ -117,6 +133,7 @@ if not USE_MOCK:
         granite_model = None
         facts_client = None
         print(f"[IBM] WARNING: IBM initialization failed ({exc}) -- using MOCK IBM services")
+        print(f"[IBM] ACTION: {_ibm_setup_hint()}")
 
 
 
@@ -227,6 +244,7 @@ async def _real_log_factsheet(claim_token: str, analysis: FraudAnalysisResult, a
 
     if facts_client is None:
         print("[IBM] WARNING: facts_client not initialized, skipping governance log")
+        print(f"[IBM] ACTION: {_ibm_setup_hint()}")
         return factsheet_id
 
     def _write():
@@ -301,6 +319,7 @@ async def _real_get_factsheets(limit: int) -> list[FactsheetEntry]:
 
     if facts_client is None:
         print("[IBM] WARNING: facts_client not initialized, returning empty factsheets")
+        print(f"[IBM] ACTION: {_ibm_setup_hint()}")
         return []
 
     def _read():

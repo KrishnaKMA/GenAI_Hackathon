@@ -1,240 +1,152 @@
-# ClaimShield — AI Insurance Fraud Detection
+# ClaimShield
 
-**Stack:** FastAPI + React + IBM watsonx.ai + GraphSAGE GNN + Isolation Forest
+ClaimShield is an end-to-end insurance fraud workflow built with a React frontend, a FastAPI backend, a live ML scoring path, and IBM integration hooks for narrative generation, governance, and Db2 storage.
 
----
+## Current Status
 
-## Quick Start (works right now, no teammate input needed)
+What is working now:
+- Frontend is running and integrated with the backend.
+- Backend API is running with auth, claim submission, analysis, reports, factsheets, and agent endpoints.
+- ML analysis is live.
+  - GraphSAGE weights are loaded from `backend/models/gnn/pretrained/weights.pt`.
+  - The tabular model is loaded from `backend/models/anomaly/iforest.pkl`.
+  - Claims go through graph building, ML scoring, explanation generation, and report assembly.
+- Local Db2 is wired through Docker and used by the backend.
 
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-cp .env.example .env          # Only JWT_SECRET needed for dev
-python ../scripts/seed_demo.py # Loads demo data (run from backend/)
-uvicorn main:app --reload     # Runs at localhost:8000
+What still needs real credentials:
+- IBM watsonx.ai live narrative generation
+- IBM watsonx.governance live factsheets
+- IBM Cloud Db2 DSN if you want hosted Db2 instead of the local Docker Db2 instance
 
-# Frontend (new terminal)
-cd frontend
-npm install
-npm run dev                   # Runs at localhost:5173
-```
-
-Login: `admin` / `admin123`
-API docs: http://localhost:8000/docs
-Demo button: Dashboard → "Demo Scenarios" → Click any risk level
-
----
-
-## Generate JWT keys (Krishna does this once, optional for dev)
-
-```bash
-openssl genrsa -out private.pem 2048
-openssl rsa -in private.pem -pubout -out public.pem
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-# Paste outputs into .env as JWT_PRIVATE_KEY, JWT_PUBLIC_KEY, FERNET_KEY
-```
-
-Without these keys, the app uses HS256 JWT fallback — fine for development.
-
----
-
-## 👋 Teammate A — Plugging in ML Models
-
-**You only need to touch ONE file:** `backend/services/ml_interface.py`
-
-### Step 1 — Put your trained files here:
-```
-backend/models/gnn/pretrained/weights.pt    ← your GraphSAGE weights
-backend/models/anomaly/iforest.pkl          ← your pickled IForest
-```
-
-### Step 2 — Open `ml_interface.py` and find these two functions:
-```python
-async def _real_analysis(claim_data: dict) -> FraudAnalysisResult:
-    # ↓ TEAMMATE A: REPLACE THIS ENTIRE FUNCTION BODY
-```
-
-Fill them in. The file has detailed comments for every step.
-
-### Step 3 — Verify it's working:
-```bash
-# Terminal (from backend/)
-curl -X POST http://localhost:8000/analyze/CLAIM_A3F9B7K2 \
-  -H "Authorization: Bearer $(curl -s -X POST http://localhost:8000/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"admin","password":"admin123"}' | python -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')"
-
-# Logs should show:
-# [ML] ✅ Model files found — using REAL model
-```
-
-### What your `_real_analysis()` receives:
-```python
-claim_data = {
-    "claim_token": "CLAIM_A3F9",     # already anonymized
-    "claim_amount": 47500.0,
-    "claim_type": "auto_repair",
-    "prior_claim_count": 3,
-    "days_since_last_claim": 45,
-    "claimant_token": "CLAIMANT_A3F9",
-    "provider_token": "PROVIDER_D4N1",
-    "repair_shop_token": "SHOP_F2Q7",
-    "incident_date": "2024-01-15",
-    "filing_date": "2024-01-16",
-    "adjuster_id": "adj_001",
-}
-```
-
-### What your function must return:
-See `FraudAnalysisResult` in `backend/models/schemas.py`. All fields documented.
-
-### Graph helpers available:
-```python
-# backend/services/graph_builder.py
-from services.graph_builder import get_entity_neighbors, build_adjacency_list, build_node_features
-```
-
-**DO NOT** touch the frontend, routes, or any other file.
-
----
-
-## 👋 Teammate B — Plugging in IBM Credentials
-
-**You only need to touch ONE file:** `backend/services/ibm_interface.py`
-
-### Step 1 — Fill in `.env`:
-```
-WATSONX_API_KEY=      ← IBM Cloud → IAM → API Keys
-WATSONX_PROJECT_ID=   ← watsonx.ai → Your Project → Manage → General
-WATSONX_URL=https://us-south.ml.cloud.ibm.com
-DB2_DSN=              ← IBM Cloud → Db2 → Service Credentials → dsn
-```
-
-### Step 2 — Open `ibm_interface.py` and fill in 3 functions:
-```python
-async def _real_narrative(analysis)            # → Granite LLM call
-async def _real_log_factsheet(token, analysis) # → watsonx.governance write
-async def _real_get_factsheets(limit)          # → watsonx.governance read
-```
-
-Each function has example code in the comments.
-
-### Step 3 — Verify Granite works:
-```bash
-curl -X POST http://localhost:8000/analyze/demo/CRITICAL \
-  -H "Authorization: Bearer <your_token>"
-# Logs should show: [IBM] ✅ IBM credentials found — using REAL watsonx
-# Narrative in response should be AI-generated, not hardcoded
-```
-
-### Step 4 — Set up Db2 tables:
-```bash
-cd backend
-python scripts/setup_db2.py
-# Creates: users, claims, entities, graph_edges, inference_log, tasks
-```
-
-**DO NOT** touch the frontend or ML files.
-
----
+Right now the IBM layer is integrated in code, but it stays in fallback mode until a real IBM Cloud IAM API key is provided.
 
 ## Architecture
 
-```
-ClaimShield/
-├── backend/
-│   ├── main.py                     ← FastAPI app + startup
-│   ├── models/
-│   │   ├── schemas.py              ← All Pydantic types (CONTRACT)
-│   │   ├── gnn/pretrained/         ← weights.pt goes here (Teammate A)
-│   │   └── anomaly/                ← iforest.pkl goes here (Teammate A)
-│   ├── core/
-│   │   ├── security.py             ← JWT, bcrypt, Fernet, TOTP
-│   │   ├── database.py             ← SQLite → Db2 abstraction
-│   │   └── exceptions.py           ← HTTP error classes
-│   ├── services/
-│   │   ├── ml_interface.py         ← ← TEAMMATE A edits this
-│   │   ├── ibm_interface.py        ← ← TEAMMATE B edits this
-│   │   ├── agent_interface.py      ← Fraud agent (4 steps)
-│   │   ├── claim_ingestor.py       ← PII tokenization pipeline
-│   │   ├── graph_builder.py        ← Graph helpers for GNN
-│   │   └── report_generator.py     ← Combines ML + IBM → report
-│   └── api/routes/
-│       ├── auth.py                 ← POST /auth/login
-│       ├── claims.py               ← GET/POST /claims, GET /factsheets
-│       ├── analysis.py             ← POST /analyze/:token
-│       ├── agent.py                ← WS /ws/agent/:token
-│       └── admin.py                ← Admin CRUD
-├── frontend/
-│   └── src/
-│       ├── App.tsx                 ← Router + auth guard + layout
-│       ├── types/index.ts          ← TypeScript interfaces (mirrors schemas.py)
-│       ├── lib/
-│       │   ├── api.ts              ← Axios API client
-│       │   ├── mockData.ts         ← Perfect mock ring data
-│       │   ├── cytoscapeConfig.ts  ← Graph styling
-│       │   └── utils.ts            ← Color helpers + formatters
-│       ├── components/
-│       │   ├── FraudGraph.tsx      ← Cytoscape entity graph
-│       │   ├── TimelineSlider.tsx  ← Date filter for graph
-│       │   ├── FraudScoreBadge.tsx ← Score display (pulses for CRITICAL)
-│       │   ├── InvestigatorReport.tsx ← Full report (4 tabs)
-│       │   ├── AgentStatus.tsx     ← Live 4-step agent panel
-│       │   ├── ClaimsTable.tsx     ← Paginated claims list
-│       │   ├── FactsheetPanel.tsx  ← IBM governance audit trail
-│       │   └── RedTeamMode.tsx     ← Demo scenario buttons
-│       └── pages/
-│           ├── LoginPage.tsx
-│           ├── DashboardPage.tsx
-│           ├── ClaimsPage.tsx
-│           ├── ReportPage.tsx
-│           └── SubmitClaimPage.tsx
-├── data/seed_data/                 ← JSON demo data
-├── scripts/
-│   ├── seed_demo.py                ← Load demo data into SQLite
-│   └── setup_db2.py                ← Create tables in IBM Db2
-└── docker-compose.yml
+End-to-end flow:
+
+1. User submits a claim in the frontend.
+2. Backend tokenizes and stores claim and entity data.
+3. Graph relationships are built for claimant, provider, and repair shop entities.
+4. ML layer runs:
+   - GraphSAGE for graph/network fraud signals
+   - tabular anomaly model for claim-level risk signals
+5. Explanations are generated from graph evidence and tabular feature contributions.
+6. IBM layer can add:
+   - Granite narrative generation
+   - governance factsheet logging
+   - hosted Db2 connectivity
+7. Frontend shows the final combined result.
+
+## Local Run
+
+Recommended local startup:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-local-db2.ps1
 ```
 
----
+That script:
+- starts the local Db2 container
+- creates `CLAIMDB` if needed
+- starts backend and frontend
 
-## API Reference (auto-documented)
+App URLs:
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-Full interactive docs at http://localhost:8000/docs
+Demo login:
+- `admin / admin123`
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | /auth/login | — | Get JWT token |
-| GET | /auth/me | ✓ | Current user |
-| GET | /claims | ✓ | List all claims |
-| POST | /claims | ✓ | Submit new claim |
-| GET | /claims/{token} | ✓ | Get claim details |
-| POST | /analyze/{token} | ✓ | Run fraud analysis |
-| POST | /analyze/demo/{level} | ✓ | Demo analysis (LOW/MEDIUM/HIGH/CRITICAL) |
-| GET | /factsheets | ✓ | IBM governance log |
-| WS | /ws/agent/{token} | — | Stream agent steps |
-| GET | /admin/stats | ADMIN | System statistics |
-| GET | /admin/users | ADMIN | User management |
+## Docker Commands
 
----
+Manual startup if needed:
 
-## Mock → Real switchover
-
-| Component | Condition | What changes |
-|-----------|-----------|-------------|
-| ML Models | `weights.pt` + `iforest.pkl` exist | `[ML] ✅` in logs |
-| IBM watsonx | `WATSONX_API_KEY` in `.env` | `[IBM] ✅` in logs |
-| Database | `DB2_DSN` in `.env` | SQLite → Db2 |
-| JWT | `JWT_PRIVATE_KEY` in `.env` | HS256 → RS256 |
-| PII Encryption | `FERNET_KEY` in `.env` | Hash → Reversible |
-
----
-
-## Docker (optional)
-
-```bash
-docker compose up --build
-# Frontend: http://localhost:5173
-# API:      http://localhost:8000/docs
+```powershell
+docker compose up --build -d
 ```
+
+Useful checks:
+
+```powershell
+docker compose ps
+Invoke-RestMethod http://localhost:8000/health | ConvertTo-Json -Compress
+docker compose logs backend --tail=200
+```
+
+## Environment
+
+Local secrets live in `backend/.env`. That file is ignored by git.
+
+Important variables:
+- `JWT_PRIVATE_KEY`
+- `JWT_PUBLIC_KEY`
+- `FERNET_KEY`
+- `FRONTEND_URL`
+- `WATSONX_API_KEY`
+- `WATSONX_PROJECT_ID`
+- `WATSONX_SPACE_ID`
+- `WATSONX_URL`
+- `DB2_DSN`
+
+Current IBM requirement:
+- `WATSONX_API_KEY` must be a real IBM Cloud IAM API key.
+- The placeholder value `claimshield-api` is not enough to activate live IBM calls.
+
+If the IBM credentials are missing or placeholder-level:
+- Granite narrative falls back to local mock output
+- governance factsheets fall back to `data/local_factsheets.json`
+
+## Verification
+
+Backend health:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/health | ConvertTo-Json -Compress
+```
+
+Backend tests:
+
+```powershell
+docker compose exec backend python -m unittest discover -s tests -v
+```
+
+End-to-end smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-e2e.ps1
+```
+
+Scenarios covered in the smoke run:
+- clean property claim
+- high-value auto repair claim
+- repeat high-risk claimant
+- medical claim without a repair shop
+
+## Repo Layout
+
+Key areas:
+- `frontend/`
+  - React app and dark-themed UI
+- `backend/`
+  - FastAPI app, DB layer, auth, ML, IBM integration
+- `backend/services/ml_interface.py`
+  - live ML scoring path
+- `backend/services/ibm_interface.py`
+  - IBM integration and fallback behavior
+- `backend/core/database.py`
+  - Db2 and SQLite abstraction
+- `scripts/bootstrap-local-db2.ps1`
+  - local startup helper
+- `scripts/smoke-e2e.ps1`
+  - end-to-end smoke test
+
+## Presentation Notes
+
+For the current local demo:
+- frontend works
+- backend works
+- ML scoring works
+- local Db2 works
+- IBM code path is present, but real IBM activation still needs the actual IAM API key
+
+That means the product is demoable end to end locally today, with IBM switching from fallback to live as soon as valid credentials are added.
