@@ -10,6 +10,7 @@ export function ReportPage() {
   const [searchParams]  = useSearchParams()
   const navigate        = useNavigate()
   const isDemo          = searchParams.get('demo') === '1'
+  const forceRefresh    = searchParams.get('refresh') === '1'
 
   const [report, setReport]   = useState<InvestigatorReport | null>(null)
   const [loading, setLoading] = useState(true)
@@ -18,11 +19,9 @@ export function ReportPage() {
   useEffect(() => {
     let cancelled = false
     const load = async () => {
-      const cachedReport = claimToken ? getCachedReport(claimToken) : null
-      if (cachedReport) {
+      const cachedReport = !forceRefresh && claimToken ? getCachedReport(claimToken) : null
+      if (cachedReport && !isDemo) {
         setReport(cachedReport)
-        setLoading(false)
-        return
       }
 
       setLoading(true)
@@ -40,15 +39,22 @@ export function ReportPage() {
         cacheReport(result)
         if (!cancelled) setReport(result)
       } catch (err: any) {
-        console.warn('[ReportPage] API error, using mock:', err?.message)
-        if (!cancelled) setReport(MOCK_CRITICAL_REPORT)
+        console.warn('[ReportPage] API error, using fallback:', err?.message)
+        if (!cancelled) {
+          if (cachedReport && !isDemo) {
+            setError('Showing cached report because the latest analysis request failed.')
+          } else {
+            setReport(MOCK_CRITICAL_REPORT)
+            setError('Latest analysis could not be loaded. Showing fallback report.')
+          }
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     load()
     return () => { cancelled = true }
-  }, [claimToken, isDemo])
+  }, [claimToken, forceRefresh, isDemo])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -66,7 +72,7 @@ export function ReportPage() {
         )}
       </div>
 
-      {loading && (
+      {loading && !report && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="skeleton" style={{ height: '80px', borderRadius: '12px' }} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
@@ -76,11 +82,12 @@ export function ReportPage() {
         </div>
       )}
 
-      {error && !loading && (
-        <div style={{ background: '#FEE2E2', border: '1px solid #FECACA', borderRadius: '12px', padding: '20px', color: '#DC2626' }}>{error}</div>
+      {error && (
+        <div style={{ background: 'rgba(127, 29, 29, 0.22)', border: '1px solid rgba(248, 113, 113, 0.35)', borderRadius: '12px', padding: '16px 20px', color: '#FCA5A5' }}>{error}</div>
       )}
 
       {report && !loading && <ReportComponent report={report} />}
+      {report && loading && <ReportComponent report={report} />}
     </div>
   )
 }

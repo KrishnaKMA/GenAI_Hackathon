@@ -14,8 +14,20 @@ const OFFLINE_DEMO_USERS = {
   investigator1: { password: 'pass123', role: 'investigator' },
 } as const
 
+function resolveApiBaseUrl() {
+  const explicitUrl = import.meta.env.VITE_API_URL?.trim()
+  if (explicitUrl) return explicitUrl
+
+  const explicitHost = import.meta.env.VITE_API_HOST?.trim()
+  if (explicitHost) {
+    return explicitHost.startsWith('http') ? explicitHost : `https://${explicitHost}`
+  }
+
+  return 'http://localhost:8000'
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: resolveApiBaseUrl(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

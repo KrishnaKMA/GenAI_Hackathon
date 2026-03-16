@@ -50,6 +50,7 @@ WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
 WATSONX_SPACE_ID   = os.getenv("WATSONX_SPACE_ID")   # needed for governance
 WATSONX_URL        = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com")
 DB2_DSN            = os.getenv("DB2_DSN")
+FORCE_MOCK_IBM     = os.getenv("FORCE_MOCK_IBM", "false").strip().lower() == "true"
 
 
 def _looks_real_secret(value: str | None) -> bool:
@@ -63,14 +64,17 @@ def _ibm_setup_hint() -> str:
     return "Set a real IBM Cloud IAM API key in WATSONX_API_KEY and a Db2 DSN in DB2_DSN to enable live IBM services."
 
 
-USE_MOCK = not bool(
+USE_MOCK = FORCE_MOCK_IBM or not bool(
     _looks_real_secret(WATSONX_API_KEY) and WATSONX_PROJECT_ID and IBM_IMPORTS_AVAILABLE
 )
 
-LOCAL_FACTSHEETS_PATH = Path("data/local_factsheets.json")
+LOCAL_FACTSHEETS_PATH = Path(os.getenv("LOCAL_FACTSHEETS_PATH", "data/local_factsheets.json"))
 LOCAL_FACTSHEETS_PATH.parent.mkdir(exist_ok=True)
 
-if _looks_real_secret(WATSONX_API_KEY) and WATSONX_PROJECT_ID and not IBM_IMPORTS_AVAILABLE:
+if FORCE_MOCK_IBM:
+    print("[IBM] INFO: FORCE_MOCK_IBM=true -- using MOCK IBM services")
+    print("[IBM] Factsheets stored locally at:", LOCAL_FACTSHEETS_PATH)
+elif _looks_real_secret(WATSONX_API_KEY) and WATSONX_PROJECT_ID and not IBM_IMPORTS_AVAILABLE:
     print("[IBM] WARNING: IBM credentials found but SDKs are not installed -- using MOCK IBM services")
 elif USE_MOCK:
     print("[IBM] WARNING: WATSONX credentials are missing or placeholder-level -- using MOCK IBM services")

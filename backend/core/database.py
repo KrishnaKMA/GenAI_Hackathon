@@ -43,7 +43,7 @@ USE_DB2 = bool(
 
 
 # Detect database location of SQLITE
-SQLITE_PATH = Path("data/local.db")
+SQLITE_PATH = Path(os.getenv("SQLITE_PATH", "data/local.db"))
 SQLITE_PATH.parent.mkdir(exist_ok=True)
  
 if DB_BACKEND == "db2" and ibm_db is None:

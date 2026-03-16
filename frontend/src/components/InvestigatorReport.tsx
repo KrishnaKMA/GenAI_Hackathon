@@ -136,6 +136,17 @@ export function InvestigatorReport({ report }: Props) {
           {/* GRAPH TAB */}
           {activeTab === 'graph' && (
             <div style={{ padding: '16px' }}>
+              <div style={{
+                marginBottom: '12px',
+                padding: '10px 12px',
+                background: 'var(--panel-alt)',
+                border: '1px solid var(--border)',
+                borderRadius: '10px',
+                fontSize: '0.75rem',
+                color: 'var(--muted)',
+              }}>
+                This graph shows the local entity network around the selected claim, not every claim in the database. Dense fraud-ring cases will expand as more linked claimants, providers, and shops are connected to that claim.
+              </div>
               <div style={{ height: '420px', marginBottom: '16px' }}>
                 <FraudGraph
                   nodes={analysis.graph_nodes}

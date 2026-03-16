@@ -6,7 +6,10 @@ ClaimShield is a fraud analysis application for insurance claims. It combines:
 - a live ML scoring path using a graph model and a tabular anomaly model
 - IBM integration hooks for narrative generation, governance factsheets, and Db2
 
-This repository is set up for local development and local demo use first. The recommended runtime is Docker Compose.
+This repository is set up for two supported paths:
+- local demo mode through Docker Compose
+- hosted deployment through Render using SQLite plus the local IBM fallback path
+
 The local demo stack uses SQLite by default for responsiveness, with local Db2 still available when you explicitly want to test that path.
 
 ## What The System Does
@@ -44,6 +47,12 @@ Still dependent on external credentials:
 - live watsonx.ai narrative generation
 - live watsonx.governance factsheets
 - hosted IBM Cloud Db2
+
+Hosted-friendly now:
+- Render frontend + backend deployment config via [render.yaml](C:\Users\alihu\Projects\FraudTracker\GenAI_Hackathon\render.yaml)
+- persistent SQLite path support through `SQLITE_PATH`
+- persistent local factsheet path support through `LOCAL_FACTSHEETS_PATH`
+- explicit `FORCE_MOCK_IBM=true` support for hosted deployments that should avoid IBM entirely
 
 If IBM credentials are missing or placeholder-level, the app stays usable locally and falls back to local narrative/factsheet behavior instead of failing.
 
@@ -149,6 +158,7 @@ Important variables:
 
 ### Frontend / API
 - `FRONTEND_URL`
+- `FRONTEND_URLS`
 
 ### IBM
 - `WATSONX_API_KEY`
@@ -159,6 +169,9 @@ Important variables:
 
 ### Local database runtime
 - `DB_BACKEND`
+- `SQLITE_PATH`
+- `LOCAL_FACTSHEETS_PATH`
+- `FORCE_MOCK_IBM`
 - `DB_CONNECT_RETRIES`
 - `DB_CONNECT_DELAY_SECONDS`
 - `DB2_DATABASE`
@@ -167,6 +180,7 @@ Notes:
 - `WATSONX_API_KEY` must be a real IBM Cloud IAM API key to activate live IBM calls.
 - The placeholder value `claimshield-api` is not sufficient.
 - If `DB2_DSN` is not set for hosted IBM Cloud Db2, the local Docker Db2 path can still be used.
+- For Render or other hosted demos, set `DB_BACKEND=sqlite` and `FORCE_MOCK_IBM=true` unless you intentionally want to activate IBM Cloud.
 
 ## Model Artifacts
 
@@ -264,6 +278,44 @@ Limitations of non-Docker local runs:
 - heavier manual dependency management
 - IBM SDK and ML runtime setup is more fragile outside the container path
 
+## Render Deployment
+
+This repo now includes a hosted deployment path that avoids the local Docker and Db2 assumptions:
+- backend as a Render web service
+- frontend as a Render static site
+- SQLite persisted on a Render disk
+- IBM forced into local fallback mode unless you later provide live credentials
+
+Deployment file:
+- [render.yaml](C:\Users\alihu\Projects\FraudTracker\GenAI_Hackathon\render.yaml)
+
+Backend service on Render:
+- root directory: `backend`
+- installs from [requirements-render.txt](C:\Users\alihu\Projects\FraudTracker\GenAI_Hackathon\backend\requirements-render.txt)
+- stores SQLite at `/var/data/local.db`
+- stores fallback factsheets at `/var/data/local_factsheets.json`
+
+Frontend service on Render:
+- root directory: `frontend`
+- builds with `npm install && npm run build`
+- reads backend host from `VITE_API_HOST`
+
+Recommended hosted env values:
+- `DB_BACKEND=sqlite`
+- `SQLITE_PATH=/var/data/local.db`
+- `LOCAL_FACTSHEETS_PATH=/var/data/local_factsheets.json`
+- `FORCE_MOCK_IBM=true`
+- `FRONTEND_URL=https://<your-frontend>.onrender.com`
+
+Still required on Render:
+- `FERNET_KEY`
+- either `JWT_SECRET` or the RSA key pair values
+
+Recommended hosted posture:
+- do not enable IBM on the first deploy
+- first confirm frontend, backend, auth, claim intake, graph, ML scoring, and report rendering
+- only then decide whether to turn IBM back on
+
 ## API Overview
 
 Main routes:
@@ -327,6 +379,11 @@ Without valid IBM credentials:
 - narrative falls back locally
 - factsheets fall back to `data/local_factsheets.json`
 - local Docker Db2 remains the primary database path
+
+For hosted Render deployment:
+- set `FORCE_MOCK_IBM=true`
+- keep the backend on SQLite
+- treat IBM as optional and re-enable it only after the core hosted deployment is stable
 
 ## Verification
 
